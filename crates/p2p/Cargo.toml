@@ -3,6 +3,10 @@ name = "p2p"
 version = "0.1.0"
 edition = "2021"
 
+[dev-dependencies]
+tracing-subscriber = { workspace = true }
+uuid               = { workspace = true }
+
 [dependencies]
 common          = { path = "../common" }
 async-trait     = { workspace = true }
@@ -13,7 +17,7 @@ serde           = { workspace = true }
 serde_json      = { workspace = true }
 futures         = { workspace = true }
 libp2p = { version = "0.54", features = [
-  "kad", "gossipsub", "noise", "yamux", "quic",
+  "kad", "gossipsub", "noise", "yamux", "tcp", "quic",
   "identify", "ping", "mdns", "autonat",
   "macros", "tokio",
 ]}
