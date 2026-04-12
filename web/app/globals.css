@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --scrollbar-thumb: #3a3a3f;
+  --scrollbar-track: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: #0f0f10;
+  color: #e8e8ea;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #55555c;
+}
+
+/* Prose styles for markdown in assistant messages */
+.prose-deai {
+  line-height: 1.7;
+  font-size: 0.9375rem;
+}
+
+.prose-deai p {
+  margin-bottom: 0.75em;
+}
+
+.prose-deai p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-deai code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875em;
+  background: #1a1a1c;
+  border: 1px solid #2e2e32;
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+  color: #c4b5fd;
+}
+
+.prose-deai pre {
+  background: #141418;
+  border: 1px solid #2e2e32;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.prose-deai pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: 0.875em;
+}
+
+.prose-deai ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose-deai ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose-deai li {
+  margin-bottom: 0.25em;
+}
+
+.prose-deai h1, .prose-deai h2, .prose-deai h3 {
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #f0f0f2;
+}
+
+.prose-deai blockquote {
+  border-left: 3px solid #3d3480;
+  padding-left: 1em;
+  color: #9ca3af;
+  margin: 0.75em 0;
+}
+
+.prose-deai a {
+  color: #7c6aff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-deai strong {
+  font-weight: 600;
+  color: #f0f0f2;
+}
+
+/* Cursor blink for streaming */
+.cursor-blink::after {
+  content: '▋';
+  animation: blink 1s step-end infinite;
+  color: #7c6aff;
+  margin-left: 1px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
