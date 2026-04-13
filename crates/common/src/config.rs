@@ -231,6 +231,9 @@ impl Default for PrivacySection {
 #[serde(default)]
 pub struct HealthSection {
     pub metrics_port:       u16,
+    /// HTTP API port — exposes /v1/infer (streaming) and /v1/models.
+    /// The TypeScript SDK's StandaloneTransport connects here.
+    pub api_port:           u16,
     /// e.g. "30s"
     pub heartbeat_interval: String,
 }
@@ -239,6 +242,7 @@ impl Default for HealthSection {
     fn default() -> Self {
         Self {
             metrics_port:       9090,
+            api_port:           4002,
             heartbeat_interval: "30s".into(),
         }
     }

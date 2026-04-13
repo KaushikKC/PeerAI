@@ -62,6 +62,7 @@ pub struct DeAIDaemon {
     storage:     Arc<dyn StorageClient>,
     session_mgr: Arc<SessionManager>,
     payment:     Arc<dyn PaymentBackend>,
+    engine:      Arc<dyn InferenceEngine>,
     scheduler:   Arc<NodeScheduler>,
     bid_engine:  Arc<BidDecisionEngine>,
     /// Present in `network` and `network_paid` modes; `None` in `standalone`.
@@ -138,6 +139,7 @@ impl DeAIDaemon {
         let scheduler = Arc::new(
             NodeScheduler::new(config.gpu.concurrent_jobs, config.gpu.concurrent_jobs * 4)
         );
+        let engine_ref = Arc::clone(&engine);
 
         // ── Bid decision engine ───────────────────────────────────────────────
         // BidDecisionEngine takes the full NodeConfig — it reads pricing, GPU,
@@ -187,13 +189,14 @@ impl DeAIDaemon {
             storage,
             session_mgr,
             payment,
+            engine: engine_ref,
             scheduler,
             bid_engine,
             p2p,
         })
     }
 
-    // ── Public accessors for health server ───────────────────────────────────
+    // ── Public accessors for health / API servers ────────────────────────────
 
     pub fn p2p_service(&self) -> Option<Arc<P2PService>> {
         self.p2p.as_ref().map(|(svc, _)| Arc::new(svc.clone()))
@@ -201,6 +204,11 @@ impl DeAIDaemon {
 
     pub fn mode_str(&self) -> String {
         format!("{:?}", self.config.node.mode)
+    }
+
+    /// Returns the inference engine for the API server.
+    pub fn inference_engine(&self) -> Arc<dyn InferenceEngine> {
+        Arc::clone(&self.engine)
     }
 
     // ── Main run loop ─────────────────────────────────────────────────────────

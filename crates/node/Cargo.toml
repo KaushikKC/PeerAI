@@ -24,3 +24,5 @@ serde_json       = { workspace = true }
 clap             = { workspace = true }
 prometheus       = { workspace = true }
 axum             = { workspace = true }
+futures          = { workspace = true }
+uuid             = { workspace = true }

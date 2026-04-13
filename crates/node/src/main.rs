@@ -2,6 +2,7 @@
 //!
 //! Parses CLI, loads config, assembles services, runs the daemon.
 
+mod api;
 mod cli;
 mod daemon;
 mod health;
@@ -107,10 +108,20 @@ async fn cmd_start(config: NodeConfig) -> anyhow::Result<()> {
     };
     health::start(config.health.metrics_port, health_state).await?;
 
+    // Start inference API server (used by the TS SDK + web UI in standalone mode)
+    let api_state = api::ApiState {
+        engine:  daemon.inference_engine(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        mode:    daemon.mode_str(),
+    };
+    api::start(config.health.api_port, api_state).await?;
+
     info!(
         health_port = config.health.metrics_port,
-        "health endpoint: http://localhost:{}/health",
-        config.health.metrics_port
+        api_port    = config.health.api_port,
+        "health: http://localhost:{}/health  |  api: http://localhost:{}/v1/infer",
+        config.health.metrics_port,
+        config.health.api_port,
     );
 
     // Run until shutdown

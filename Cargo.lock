@@ -2421,6 +2421,7 @@ dependencies = [
  "clap",
  "common",
  "context",
+ "futures",
  "inference",
  "p2p",
  "prometheus",
@@ -2430,6 +2431,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
