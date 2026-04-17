@@ -23,8 +23,8 @@ use common::{
 };
 use reputation::{GossipReputationStore, LocalReputationStore, ReputationStore};
 use settlement::{
-    ensure_free_fallback, EvmConfig, EvmSettlement, FreeSettlement, PaymentChannel,
-    SettlementAdapter, SignedReceiptSettlement, SuiConfig, SuiSettlement,
+    ensure_free_fallback, ChannelChainConfig, EvmConfig, EvmSettlement, FreeSettlement,
+    PaymentChannel, SettlementAdapter, SignedReceiptSettlement, SuiConfig, SuiSettlement,
 };
 use context::session::SessionManager;
 use inference::{
@@ -76,6 +76,9 @@ pub struct DeAIDaemon {
     bid_engine:  Arc<BidDecisionEngine>,
     /// Present in `network` and `network_paid` modes; `None` in `standalone`.
     p2p:         Option<(P2PService, tokio::sync::mpsc::Receiver<P2PEvent>)>,
+    /// Receives new Merkle roots from `GossipReputationStore`; forwarded to P2P.
+    /// `None` when the reputation store is not in gossip mode.
+    rep_root_rx: Option<tokio::sync::mpsc::Receiver<[u8; 32]>>,
 }
 
 impl DeAIDaemon {
@@ -137,7 +140,15 @@ impl DeAIDaemon {
         };
 
         // ── Reputation store ─────────────────────────────────────────────────
+        // For Gossip/Anchored modes we create an mpsc channel so the store can
+        // hand off new Merkle roots to a background task that calls
+        // P2PService::publish_reputation_root.  The sender is given to the store;
+        // the receiver is stored here and connected to P2P once the swarm is up.
         let peer_id_str = config.node.node_id.clone();
+
+        // rep_root_rx is Some only in gossip/anchored mode.
+        let mut rep_root_rx: Option<tokio::sync::mpsc::Receiver<[u8; 32]>> = None;
+
         let reputation: Arc<dyn ReputationStore> = match config.reputation.store {
             ReputationStoreKind::Local => {
                 let path = expand_tilde("~/.deai/reputation.json");
@@ -150,8 +161,11 @@ impl DeAIDaemon {
                 let path = expand_tilde("~/.deai/reputation.json");
                 let inner = LocalReputationStore::from_file(peer_id_str.clone(), path)
                     .unwrap_or_else(|_| LocalReputationStore::in_memory(peer_id_str.clone()));
-                info!("reputation store: gossip (Merkle root gossip wired in Phase G)");
-                Arc::new(GossipReputationStore::new(Arc::new(inner)))
+                // Capacity 64: buffers recent roots if the P2P task is briefly slow.
+                let (tx, rx) = tokio::sync::mpsc::channel::<[u8; 32]>(64);
+                rep_root_rx = Some(rx);
+                info!("reputation store: gossip (Merkle roots broadcast via P2P)");
+                Arc::new(GossipReputationStore::new_with_broadcast(Arc::new(inner), tx))
             }
         };
 
@@ -166,7 +180,34 @@ impl DeAIDaemon {
                 match a.id.as_str() {
                     "free"    => Some(Arc::new(FreeSettlement)),
                     "receipt" => Some(Arc::new(SignedReceiptSettlement::new())),
-                    "channel" => Some(Arc::new(PaymentChannel::new())),
+                    "channel" => {
+                        // Phase F: if rpc_url + contract_address + signer_key_hex are
+                        // present, wire up on-chain open/close.  Otherwise fall back to
+                        // the in-memory-only stub (Phase C behaviour).
+                        let chain_cfg = (|| -> Option<ChannelChainConfig> {
+                            let rpc_url          = a.rpc_url.clone()?;
+                            let contract_address = a.contract_address.clone()?;
+                            let chain_id         = a.chain_id.unwrap_or(1);
+                            let seed_bytes       = hex::decode(a.signer_key_hex.as_deref()?).ok()?;
+                            let signer_seed: [u8; 32] = seed_bytes.try_into().ok()?;
+                            Some(ChannelChainConfig { rpc_url, contract_address, chain_id, signer_seed })
+                        })();
+
+                        match chain_cfg {
+                            Some(cfg) => {
+                                info!(
+                                    chain_id = cfg.chain_id,
+                                    contract = %cfg.contract_address,
+                                    "channel settlement adapter loaded (on-chain mode)"
+                                );
+                                Some(Arc::new(PaymentChannel::with_chain(cfg)))
+                            }
+                            None => {
+                                info!("channel settlement adapter loaded (in-memory mode)");
+                                Some(Arc::new(PaymentChannel::new()))
+                            }
+                        }
+                    }
                     "sui"     => {
                         let rpc_url = match &a.rpc_url {
                             Some(u) => u.clone(),
@@ -372,6 +413,7 @@ impl DeAIDaemon {
             scheduler,
             bid_engine,
             p2p,
+            rep_root_rx,
         })
     }
 
@@ -402,7 +444,31 @@ impl DeAIDaemon {
         info!("daemon running — press Ctrl-C to stop");
 
         if let Some((svc, mut events)) = self.p2p.take() {
-            // Network mode: handle P2P events
+            // Network mode: handle P2P events.
+
+            // Phase G: if we have a rep_root_rx, spawn a background task that
+            // forwards Merkle roots from the GossipReputationStore to the P2P layer.
+            if let Some(mut rep_rx) = self.rep_root_rx.take() {
+                let svc_clone = svc.clone();
+                tokio::spawn(async move {
+                    while let Some(root) = rep_rx.recv().await {
+                        if let Err(e) = svc_clone.publish_reputation_root(root).await {
+                            warn!(
+                                root = %hex::encode(root),
+                                %e,
+                                "gossip: failed to publish Merkle root via P2P"
+                            );
+                        } else {
+                            debug!(
+                                root = %hex::encode(root),
+                                "gossip: Merkle root published on reputation/update topic"
+                            );
+                        }
+                    }
+                    debug!("gossip: reputation broadcast task exiting");
+                });
+            }
+
             let bid_engine = Arc::clone(&self.bid_engine);
             let scheduler  = Arc::clone(&self.scheduler);
             let payment    = Arc::clone(&self.payment);
@@ -479,6 +545,17 @@ async fn event_loop(
 
             P2PEvent::PeerDisconnected(peer_id) => {
                 debug!(%peer_id, "peer disconnected");
+            }
+
+            P2PEvent::ReputationRootReceived { from, root } => {
+                // Phase G: a peer has broadcast their latest Merkle root.
+                // Future phases will verify and integrate it into our peer
+                // reputation cache.  For now, log it.
+                info!(
+                    peer    = %from,
+                    root    = %hex::encode(root),
+                    "reputation: received Merkle root from peer"
+                );
             }
         }
     }

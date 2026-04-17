@@ -4,14 +4,11 @@
 //!
 //! ```text
 //! SettlementAdapter (trait)
-//! ├── FreeSettlement          — no payment, no chain required
-//! ├── SignedReceiptSettlement  — node signs proof; client trusts receipt (no chain)
-//! ├── PaymentChannel          — off-chain bilateral channels (Phase C; on-chain in Phase F)
-//! └── SuiSettlement           — Move escrow contracts on Sui (Phase D) ✅
-//!
-//! Future (Phases E / F):
-//! ├── EvmSettlement           — Solidity escrow, any EVM chain (Base, Arbitrum, …)
-//! └── PaymentChannel on-chain — open/close via chain TX instead of in-memory stub
+//! ├── FreeSettlement          — no payment, no chain required           ✅
+//! ├── SignedReceiptSettlement  — node signs proof; client trusts receipt  ✅
+//! ├── PaymentChannel          — off-chain bilateral channels + on-chain  ✅ Phase F
+//! ├── SuiSettlement           — Move escrow contracts on Sui             ✅ Phase D
+//! └── EvmSettlement           — Solidity escrow, any EVM chain           ✅ Phase E
 //! ```
 //!
 //! All node code holds `Vec<Arc<dyn SettlementAdapter>>`. Which adapters are
@@ -29,7 +26,7 @@ pub use adapter::{
     compatible_bids, ensure_free_fallback, select_adapter,
     EscrowHandle, EscrowParams, SettlementAdapter, SettlementCapabilities,
 };
-pub use channel::PaymentChannel;
+pub use channel::{ChannelChainConfig, PaymentChannel};
 pub use evm::{EvmConfig, EvmSettlement};
 pub use free::FreeSettlement;
 pub use receipt::SignedReceiptSettlement;

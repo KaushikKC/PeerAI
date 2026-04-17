@@ -1,13 +1,28 @@
 //! `GossipReputationStore` — wraps `LocalReputationStore` and gossips Merkle roots.
 //!
-//! In Phase A this is a thin wrapper that adds logging hooks for future P2P
-//! gossip integration (Phase G). The gossip protocol itself is wired in when
-//! the reputation topic is connected to the libp2p service.
+//! After every `record_proof` the new Merkle root is sent on an `mpsc` channel.
+//! A background task in `daemon.rs` picks up roots and forwards them to the
+//! `P2PService::publish_reputation_root` method, which broadcasts the root on
+//! the `reputation/update` gossipsub topic so all network peers can see it.
+//!
+//! ## Wiring
+//!
+//! ```text
+//! record_proof()
+//!   → inner.record_proof()
+//!   → compute new Merkle root
+//!   → mpsc::Sender<[u8;32]>.send(root)         ← GossipReputationStore
+//!        ↓ background task (daemon.rs)
+//!   → p2p_service.publish_reputation_root(root) ← gossipsub broadcast
+//!        ↓ receiving peers
+//!   → P2PEvent::ReputationRootReceived          ← handled in daemon event loop
+//! ```
 
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use tracing::debug;
+use tokio::sync::mpsc;
+use tracing::{debug, warn};
 
 use common::types::{NodePeerId, ProofOfInference, ReputationScore};
 
@@ -18,12 +33,25 @@ use crate::{
 };
 
 pub struct GossipReputationStore {
-    inner: Arc<LocalReputationStore>,
+    inner:        Arc<LocalReputationStore>,
+    /// When `Some`, the new Merkle root is sent here after every proof.
+    /// The receiver lives in a background task that calls
+    /// `P2PService::publish_reputation_root`.
+    broadcast_tx: Option<mpsc::Sender<[u8; 32]>>,
 }
 
 impl GossipReputationStore {
+    /// Wraps `inner` without any broadcast channel (logging-only mode).
     pub fn new(inner: Arc<LocalReputationStore>) -> Self {
-        Self { inner }
+        Self { inner, broadcast_tx: None }
+    }
+
+    /// Wraps `inner` and sends every new Merkle root on `broadcast_tx`.
+    pub fn new_with_broadcast(
+        inner:        Arc<LocalReputationStore>,
+        broadcast_tx: mpsc::Sender<[u8; 32]>,
+    ) -> Self {
+        Self { inner, broadcast_tx: Some(broadcast_tx) }
     }
 }
 
@@ -32,13 +60,27 @@ impl ReputationStore for GossipReputationStore {
     async fn record_proof(&self, proof: &ProofOfInference) -> anyhow::Result<()> {
         self.inner.record_proof(proof).await?;
 
-        // Phase G: after recording, gossip the new Merkle root over libp2p.
-        // For now we just log the intent.
         let root = self.inner.merkle_root().await?;
-        debug!(
-            root = %hex::encode(root),
-            "gossip: new Merkle root ready to broadcast (wired in Phase G)"
-        );
+
+        if let Some(ref tx) = self.broadcast_tx {
+            if let Err(e) = tx.try_send(root) {
+                warn!(
+                    root = %hex::encode(root),
+                    %e,
+                    "gossip: failed to send Merkle root to broadcast task"
+                );
+            } else {
+                debug!(
+                    root = %hex::encode(root),
+                    "gossip: Merkle root queued for P2P broadcast"
+                );
+            }
+        } else {
+            debug!(
+                root = %hex::encode(root),
+                "gossip: Merkle root computed (no P2P channel configured)"
+            );
+        }
 
         Ok(())
     }

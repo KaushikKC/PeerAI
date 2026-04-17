@@ -88,15 +88,15 @@ pub struct EvmConfig {
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
-struct RpcEnvelope {
-    result: Option<Value>,
-    error:  Option<RpcError>,
+pub(crate) struct RpcEnvelope {
+    pub(crate) result: Option<Value>,
+    pub(crate) error:  Option<RpcError>,
 }
 
 #[derive(Debug, Deserialize)]
-struct RpcError {
-    code:    i64,
-    message: String,
+pub(crate) struct RpcError {
+    pub(crate) code:    i64,
+    pub(crate) message: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ struct RpcError {
 // Full spec: https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/
 
 /// RLP-encode an unsigned 128-bit integer.  Zero → `0x80` (empty string).
-fn rlp_uint(n: u128) -> Vec<u8> {
+pub(crate) fn rlp_uint(n: u128) -> Vec<u8> {
     if n == 0 {
         return vec![0x80];
     }
@@ -117,7 +117,7 @@ fn rlp_uint(n: u128) -> Vec<u8> {
 }
 
 /// RLP-encode a byte slice as a string item.
-fn rlp_bytes(data: &[u8]) -> Vec<u8> {
+pub(crate) fn rlp_bytes(data: &[u8]) -> Vec<u8> {
     if data.len() == 1 && data[0] < 0x80 {
         return data.to_vec(); // single byte in [0x00, 0x7f] encodes as itself
     }
@@ -127,7 +127,7 @@ fn rlp_bytes(data: &[u8]) -> Vec<u8> {
 }
 
 /// RLP-encode a list of already-encoded items.
-fn rlp_list(items: &[Vec<u8>]) -> Vec<u8> {
+pub(crate) fn rlp_list(items: &[Vec<u8>]) -> Vec<u8> {
     let payload: Vec<u8> = items.iter().flatten().cloned().collect();
     let mut out = rlp_len_prefix(payload.len(), 0xc0);
     out.extend(payload);
@@ -135,7 +135,7 @@ fn rlp_list(items: &[Vec<u8>]) -> Vec<u8> {
 }
 
 /// Build the length prefix for a string (offset=0x80) or list (offset=0xc0).
-fn rlp_len_prefix(len: usize, offset: u8) -> Vec<u8> {
+pub(crate) fn rlp_len_prefix(len: usize, offset: u8) -> Vec<u8> {
     if len < 56 {
         vec![offset + len as u8]
     } else {
@@ -153,27 +153,27 @@ fn rlp_len_prefix(len: usize, offset: u8) -> Vec<u8> {
 // ---------------------------------------------------------------------------
 
 /// Keccak-256 of the canonical function signature → first 4 bytes (4-byte selector).
-fn abi_selector(sig: &str) -> [u8; 4] {
+pub(crate) fn abi_selector(sig: &str) -> [u8; 4] {
     let h = Keccak256::digest(sig.as_bytes());
     [h[0], h[1], h[2], h[3]]
 }
 
 /// ABI-encode an address (20 bytes) as a 32-byte word (left-padded with zeros).
-fn abi_address(addr: &[u8; 20]) -> [u8; 32] {
+pub(crate) fn abi_address(addr: &[u8; 20]) -> [u8; 32] {
     let mut word = [0u8; 32];
     word[12..].copy_from_slice(addr);
     word
 }
 
 /// ABI-encode a u64 as a uint256 (left-padded to 32 bytes).
-fn abi_uint256(n: u64) -> [u8; 32] {
+pub(crate) fn abi_uint256(n: u64) -> [u8; 32] {
     let mut word = [0u8; 32];
     word[24..].copy_from_slice(&n.to_be_bytes());
     word
 }
 
 /// ABI-encode up to 32 bytes as a bytes32 (right-padded with zeros).
-fn abi_bytes32(data: &[u8]) -> [u8; 32] {
+pub(crate) fn abi_bytes32(data: &[u8]) -> [u8; 32] {
     let mut word = [0u8; 32];
     let len = data.len().min(32);
     word[..len].copy_from_slice(&data[..len]);
@@ -181,7 +181,7 @@ fn abi_bytes32(data: &[u8]) -> [u8; 32] {
 }
 
 /// Concatenate: 4-byte selector || ABI-encoded word arguments.
-fn abi_call(selector: [u8; 4], args: &[[u8; 32]]) -> Vec<u8> {
+pub(crate) fn abi_call(selector: [u8; 4], args: &[[u8; 32]]) -> Vec<u8> {
     let mut calldata = selector.to_vec();
     for arg in args {
         calldata.extend_from_slice(arg);
@@ -196,7 +196,7 @@ fn abi_call(selector: [u8; 4], args: &[[u8; 32]]) -> Vec<u8> {
 /// Derive an Ethereum address from a secp256k1 private key seed.
 ///
 /// Address = keccak256(uncompressed_pubkey[1..])[12..32], hex with `0x` prefix.
-fn eth_address(seed: &[u8; 32]) -> anyhow::Result<([u8; 20], String)> {
+pub(crate) fn eth_address(seed: &[u8; 32]) -> anyhow::Result<([u8; 20], String)> {
     let sk = SigningKey::from_bytes(seed.into())
         .context("EvmSettlement: invalid secp256k1 private key")?;
 
@@ -218,7 +218,7 @@ fn eth_address(seed: &[u8; 32]) -> anyhow::Result<([u8; 20], String)> {
 ///
 /// Signing hash = keccak256(`0x02` || RLP(unsigned_fields)).
 /// Signature format in signed RLP: `(v: 0|1, r: 32B, s: 32B)`.
-fn sign_eip1559(
+pub(crate) fn sign_eip1559(
     chain_id:         u64,
     nonce:            u64,
     max_priority_fee: u64, // wei
@@ -287,17 +287,17 @@ fn sign_eip1559(
 // Numeric / address helpers
 // ---------------------------------------------------------------------------
 
-fn parse_hex_u64(s: &str) -> anyhow::Result<u64> {
+pub(crate) fn parse_hex_u64(s: &str) -> anyhow::Result<u64> {
     let s = s.strip_prefix("0x").unwrap_or(s);
     u64::from_str_radix(s, 16).context("parse hex u64")
 }
 
-fn parse_hex_u128(s: &str) -> anyhow::Result<u128> {
+pub(crate) fn parse_hex_u128(s: &str) -> anyhow::Result<u128> {
     let s = s.strip_prefix("0x").unwrap_or(s);
     u128::from_str_radix(s, 16).context("parse hex u128")
 }
 
-fn parse_addr(s: &str) -> anyhow::Result<[u8; 20]> {
+pub(crate) fn parse_addr(s: &str) -> anyhow::Result<[u8; 20]> {
     let s = s.strip_prefix("0x").unwrap_or(s);
     let bytes = hex::decode(s).context("invalid hex address")?;
     bytes

@@ -2694,6 +2694,7 @@ dependencies = [
  "async-trait",
  "common",
  "futures",
+ "hex",
  "libp2p",
  "serde",
  "serde_json",

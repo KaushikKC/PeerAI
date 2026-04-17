@@ -34,6 +34,11 @@ pub enum P2PEvent {
     NodeAnnounceReceived(NodeCapabilities),
     PeerConnected(PeerId),
     PeerDisconnected(PeerId),
+    /// A remote peer published a reputation Merkle root on the reputation topic.
+    ReputationRootReceived {
+        from: String,
+        root: [u8; 32],
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -41,6 +46,10 @@ pub enum P2PEvent {
 // ---------------------------------------------------------------------------
 
 enum SwarmCommand {
+    BroadcastReputationRoot {
+        root: [u8; 32],
+        resp: oneshot::Sender<anyhow::Result<()>>,
+    },
     BroadcastInferenceRequest {
         req:  InferenceRequest,
         resp: oneshot::Sender<anyhow::Result<()>>,
@@ -83,6 +92,18 @@ pub struct P2PService {
 }
 
 impl P2PService {
+    /// Broadcast a reputation Merkle root to all peers on the reputation topic.
+    ///
+    /// Called by `GossipReputationStore` after every `record_proof`.
+    pub async fn publish_reputation_root(&self, root: [u8; 32]) -> anyhow::Result<()> {
+        let (resp_tx, resp_rx) = oneshot::channel();
+        self.cmd_tx
+            .send(SwarmCommand::BroadcastReputationRoot { root, resp: resp_tx })
+            .await
+            .context("swarm task gone")?;
+        resp_rx.await.context("swarm task dropped response")?
+    }
+
     /// Broadcast an inference request to model-specific and catch-all topics.
     pub async fn broadcast_inference_request(
         &self,
@@ -337,6 +358,19 @@ fn handle_command(
     model_topics: &mut HashMap<libp2p::gossipsub::TopicHash, String>,
 ) {
     match cmd {
+        SwarmCommand::BroadcastReputationRoot { root, resp } => {
+            let result = (|| -> anyhow::Result<()> {
+                // Wire format: {"root":"<hex-64-chars>"}
+                let payload = serde_json::to_vec(&serde_json::json!({
+                    "root": hex::encode(root),
+                }))?;
+                let topic = topics::reputation_topic();
+                swarm.behaviour_mut().gossipsub.publish(topic, payload)?;
+                Ok(())
+            })();
+            let _ = resp.send(result);
+        }
+
         SwarmCommand::BroadcastInferenceRequest { req, resp } => {
             let result = (|| -> anyhow::Result<()> {
                 let payload = serde_json::to_vec(&req)?;
@@ -535,9 +569,29 @@ async fn dispatch_gossipsub_message(
             }
         }
 
-        topics::KnownTopic::NodeHealth | topics::KnownTopic::Reputation => {
-            // Handled by future phases (reputation system, health aggregator).
-            debug!(topic = ?message.topic, "received health/reputation message");
+        topics::KnownTopic::Reputation => {
+            // Decode {"root":"<hex>"} and emit ReputationRootReceived.
+            if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&message.data) {
+                if let Some(hex_str) = v.get("root").and_then(|r| r.as_str()) {
+                    if let Ok(bytes) = hex::decode(hex_str) {
+                        if let Ok(arr) = bytes.try_into() {
+                            let from = message
+                                .source
+                                .map(|p| p.to_string())
+                                .unwrap_or_else(|| "unknown".into());
+                            let _ = event_tx
+                                .send(P2PEvent::ReputationRootReceived { from, root: arr })
+                                .await;
+                            return;
+                        }
+                    }
+                }
+            }
+            debug!(topic = ?message.topic, "received undecodable reputation message");
+        }
+
+        topics::KnownTopic::NodeHealth => {
+            debug!(topic = ?message.topic, "received health message");
         }
 
         topics::KnownTopic::Unknown(hash) => {
