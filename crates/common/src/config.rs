@@ -245,6 +245,10 @@ pub struct HealthSection {
     pub api_port:           u16,
     /// e.g. "30s"
     pub heartbeat_interval: String,
+    /// Externally-reachable base URL broadcast in P2P capability announcements
+    /// so marketplace clients can connect directly.  Example: "http://203.0.113.10:4002".
+    /// Leave unset (`""` or absent) to omit from announcements.
+    pub api_url:            Option<String>,
 }
 
 impl Default for HealthSection {
@@ -253,6 +257,7 @@ impl Default for HealthSection {
             metrics_port:       9090,
             api_port:           4002,
             heartbeat_interval: "30s".into(),
+            api_url:            None,
         }
     }
 }

@@ -11,7 +11,7 @@
 //! Blockchain (Sui) is only needed in `network_paid` mode, and even then it is
 //! injected via the `BlockchainClient` trait — not called directly.
 
-use std::{path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use anyhow::Context as _;
 use tracing::{debug, error, info, warn};
@@ -19,8 +19,21 @@ use tracing::{debug, error, info, warn};
 use common::{
     config::{NodeConfig, OperationMode, ReputationStoreKind},
     payment::{FreePayment, LocalLedger, PaymentBackend},
-    types::{GpuType, InferenceRequest, NodeCapabilities, ReputationScore},
+    types::{GpuType, InferenceBid, InferenceRequest, NodeCapabilities, ReputationScore},
 };
+
+// ---------------------------------------------------------------------------
+// Shared registries exposed to the HTTP API layer
+// ---------------------------------------------------------------------------
+
+/// Peer capabilities indexed by libp2p PeerId string.
+pub type PeerRegistry = Arc<tokio::sync::Mutex<HashMap<String, NodeCapabilities>>>;
+
+/// Per-request bid collection channels.  The HTTP marketplace handler inserts a
+/// sender before broadcasting; the P2P event loop forwards matching bids to it.
+pub type BidCollectors =
+    Arc<tokio::sync::Mutex<HashMap<uuid::Uuid, tokio::sync::mpsc::Sender<InferenceBid>>>>;
+
 use crate::identity::NodeIdentity;
 use reputation::{GossipReputationStore, LocalReputationStore, ReputationStore};
 use settlement::{
@@ -78,10 +91,14 @@ pub struct DeAIDaemon {
     /// Ed25519 identity keypair — signs every ProofOfInference.
     identity:    Arc<NodeIdentity>,
     /// Present in `network` and `network_paid` modes; `None` in `standalone`.
-    p2p:         Option<(P2PService, tokio::sync::mpsc::Receiver<P2PEvent>)>,
+    p2p:            Option<(P2PService, tokio::sync::mpsc::Receiver<P2PEvent>)>,
     /// Receives new Merkle roots from `GossipReputationStore`; forwarded to P2P.
     /// `None` when the reputation store is not in gossip mode.
-    rep_root_rx: Option<tokio::sync::mpsc::Receiver<[u8; 32]>>,
+    rep_root_rx:    Option<tokio::sync::mpsc::Receiver<[u8; 32]>>,
+    /// Known peers — updated whenever a `NodeAnnounceReceived` event arrives.
+    peer_registry:  PeerRegistry,
+    /// Bid collection channels registered by the marketplace HTTP handler.
+    bid_collectors: BidCollectors,
 }
 
 impl DeAIDaemon {
@@ -401,6 +418,7 @@ impl DeAIDaemon {
                             token_id:      a.token_id.clone(),
                         })
                         .collect(),
+                    api_url:              config.health.api_url.clone(),
                 };
                 // Best-effort announce — may fail if no peers yet
                 let _ = svc.announce_capabilities(&caps).await;
@@ -408,6 +426,9 @@ impl DeAIDaemon {
                 Some((svc, events))
             }
         };
+
+        let peer_registry:  PeerRegistry  = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
+        let bid_collectors: BidCollectors = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
 
         Ok(Self {
             config,
@@ -422,6 +443,8 @@ impl DeAIDaemon {
             identity,
             p2p,
             rep_root_rx,
+            peer_registry,
+            bid_collectors,
         })
     }
 
@@ -448,6 +471,17 @@ impl DeAIDaemon {
     /// Returns the active settlement adapters (for job dispatch and bid matching).
     pub fn settlements(&self) -> &[Arc<dyn SettlementAdapter>] {
         &self.settlements
+    }
+
+    /// Cloned `PeerRegistry` — shared with the HTTP API server.
+    pub fn peer_registry(&self) -> PeerRegistry { Arc::clone(&self.peer_registry) }
+
+    /// Cloned `BidCollectors` — shared with the HTTP API server.
+    pub fn bid_collectors(&self) -> BidCollectors { Arc::clone(&self.bid_collectors) }
+
+    /// Returns a cloned `P2PService` handle for use in the HTTP API server.
+    pub fn p2p_service_cloned(&self) -> Option<P2PService> {
+        self.p2p.as_ref().map(|(svc, _)| svc.clone())
     }
 
     // ── Main run loop ─────────────────────────────────────────────────────────
@@ -482,12 +516,15 @@ impl DeAIDaemon {
                 });
             }
 
-            let bid_engine = Arc::clone(&self.bid_engine);
-            let scheduler  = Arc::clone(&self.scheduler);
-            let payment    = Arc::clone(&self.payment);
+            let bid_engine     = Arc::clone(&self.bid_engine);
+            let scheduler      = Arc::clone(&self.scheduler);
+            let payment        = Arc::clone(&self.payment);
+            let peer_registry  = Arc::clone(&self.peer_registry);
+            let bid_collectors = Arc::clone(&self.bid_collectors);
 
             tokio::select! {
-                _ = event_loop(svc, &mut events, bid_engine, scheduler, payment) => {}
+                _ = event_loop(svc, &mut events, bid_engine, scheduler, payment,
+                               peer_registry, bid_collectors) => {}
                 _ = tokio::signal::ctrl_c() => {
                     info!("shutdown signal received");
                 }
@@ -511,15 +548,17 @@ impl DeAIDaemon {
 ///
 /// Handles incoming P2P events:
 /// - `InferenceRequestReceived` → run bid decision → optionally send bid
-/// - `BidReceived`              → (client role) select winning bid
-/// - `NodeAnnounceReceived`     → update peer registry
+/// - `BidReceived`              → forward to any registered marketplace HTTP handler
+/// - `NodeAnnounceReceived`     → insert into peer registry
 /// - `PeerConnected/Disconnected` → log
 async fn event_loop(
-    svc:        P2PService,
-    events:     &mut tokio::sync::mpsc::Receiver<P2PEvent>,
-    bid_engine: Arc<BidDecisionEngine>,
-    scheduler:  Arc<NodeScheduler>,
-    payment:    Arc<dyn PaymentBackend>,
+    svc:            P2PService,
+    events:         &mut tokio::sync::mpsc::Receiver<P2PEvent>,
+    bid_engine:     Arc<BidDecisionEngine>,
+    scheduler:      Arc<NodeScheduler>,
+    payment:        Arc<dyn PaymentBackend>,
+    peer_registry:  PeerRegistry,
+    bid_collectors: BidCollectors,
 ) {
     while let Some(event) = events.recv().await {
         match event {
@@ -540,16 +579,22 @@ async fn event_loop(
                     price      = bid.accepted_settlements.first().map(|o| o.price_per_1k).unwrap_or(0),
                     "bid received"
                 );
-                // Client-side bid collection is handled by the TypeScript SDK
-                // (Phase 7). The GPU node ignores bids not for its own requests.
+                // Forward to the marketplace HTTP handler waiting on this request_id.
+                let tx = bid_collectors.lock().await
+                    .get(&bid.request_id)
+                    .cloned();
+                if let Some(tx) = tx {
+                    let _ = tx.try_send(bid);
+                }
             }
 
             P2PEvent::NodeAnnounceReceived(caps) => {
                 debug!(
                     peer_id = %caps.peer_id,
                     models  = ?caps.models,
-                    "node announcement received"
+                    "node announcement received — updating peer registry"
                 );
+                peer_registry.lock().await.insert(caps.peer_id.clone(), caps);
             }
 
             P2PEvent::PeerConnected(peer_id) => {

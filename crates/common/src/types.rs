@@ -133,6 +133,10 @@ pub struct NodeCapabilities {
     pub reputation:           ReputationScore,
     /// Settlement protocols this node accepts, in preference order.
     pub accepted_settlements: Vec<SettlementOffer>,
+    /// Externally-reachable HTTP API URL (e.g. "http://1.2.3.4:4002").
+    /// Set from `health.api_url` in config.  `None` if not configured.
+    #[serde(default)]
+    pub api_url:              Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
