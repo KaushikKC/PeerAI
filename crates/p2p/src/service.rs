@@ -1,5 +1,7 @@
 use std::{
     collections::HashMap,
+    fs,
+    path::PathBuf,
     time::Duration,
 };
 
@@ -12,6 +14,8 @@ use libp2p::{
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, error, info, warn};
+
+use serde::{Deserialize, Serialize};
 
 use common::{
     config::NodeConfig,
@@ -194,20 +198,51 @@ impl P2PService {
 }
 
 // ---------------------------------------------------------------------------
+// Announce envelope — wraps NodeCapabilities with a sequence number so each
+// publish has unique bytes and gossipsub's duplicate-message filter won't
+// suppress repeated periodic announcements.
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize, Deserialize)]
+struct AnnounceEnvelope {
+    #[serde(flatten)]
+    caps: NodeCapabilities,
+    seq:  u64,
+}
+
+fn publish_announce(
+    caps:  &NodeCapabilities,
+    seq:   &mut u64,
+    swarm: &mut Swarm<DeAIBehaviour>,
+) {
+    *seq += 1;
+    let envelope = AnnounceEnvelope { caps: caps.clone(), seq: *seq };
+    if let Ok(payload) = serde_json::to_vec(&envelope) {
+        match swarm.behaviour_mut().gossipsub
+            .publish(topics::node_announce_topic(), payload)
+        {
+            Ok(_)  => debug!(seq = *seq, "capability announce published"),
+            Err(e) => debug!(%e, seq = *seq, "announce publish failed (no mesh peers yet)"),
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Builder — creates the swarm and spawns the event loop
 // ---------------------------------------------------------------------------
 
 /// Build a `P2PService` from config, spawn its event loop, and return both
 /// the service handle and a receiver for inbound events.
 pub async fn build(
-    config: &NodeConfig,
+    config:   &NodeConfig,
+    own_caps: NodeCapabilities,
 ) -> anyhow::Result<(P2PService, mpsc::Receiver<P2PEvent>)> {
     let swarm = build_swarm(config)?;
 
     let (cmd_tx, cmd_rx) = mpsc::channel(256);
     let (event_tx, event_rx) = mpsc::channel(256);
 
-    tokio::spawn(swarm_task(swarm, cmd_rx, event_tx, config.clone()));
+    tokio::spawn(swarm_task(swarm, cmd_rx, event_tx, config.clone(), own_caps));
 
     Ok((P2PService { cmd_tx }, event_rx))
 }
@@ -216,11 +251,31 @@ pub async fn build(
 // Swarm construction
 // ---------------------------------------------------------------------------
 
-fn build_swarm(_config: &NodeConfig) -> anyhow::Result<Swarm<DeAIBehaviour>> {
-    let swarm = libp2p::SwarmBuilder::with_new_identity()
+pub fn load_or_create_keypair(data_dir: &str) -> anyhow::Result<libp2p::identity::Keypair> {
+    let path = PathBuf::from(data_dir).join("p2p_keypair.key");
+    if path.exists() {
+        let bytes = fs::read(&path)
+            .with_context(|| format!("reading P2P keypair from {}", path.display()))?;
+        libp2p::identity::Keypair::from_protobuf_encoding(&bytes)
+            .context("decoding P2P keypair")
+    } else {
+        let kp = libp2p::identity::Keypair::generate_ed25519();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&path, kp.to_protobuf_encoding()?)
+            .with_context(|| format!("saving P2P keypair to {}", path.display()))?;
+        info!(path = %path.display(), "generated new P2P keypair");
+        Ok(kp)
+    }
+}
+
+fn build_swarm(config: &NodeConfig) -> anyhow::Result<Swarm<DeAIBehaviour>> {
+    let keypair = load_or_create_keypair(&config.node.data_dir)?;
+    let swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
         .with_tcp(
-            tcp::Config::default(),
+            tcp::Config::default().port_reuse(false),
             noise::Config::new,
             yamux::Config::default,
         )?
@@ -240,6 +295,20 @@ fn build_swarm(_config: &NodeConfig) -> anyhow::Result<Swarm<DeAIBehaviour>> {
                 // Anonymous: message origin is authenticated at the libp2p
                 // transport layer (noise); we don't need gossipsub-level signing.
                 .validation_mode(gossipsub::ValidationMode::None)
+                // The default message-id function uses source+sequence_number.
+                // With Anonymous mode both are fixed/empty → every message gets
+                // the same ID and gossipsub silently drops all but the first.
+                // Use hash(topic || data) so: (a) each unique payload is unique,
+                // and (b) the same payload published on two different topics
+                // (e.g. inference/any + inference/model) gets different IDs.
+                .message_id_fn(|message: &gossipsub::Message| {
+                    use std::collections::hash_map::DefaultHasher;
+                    use std::hash::{Hash, Hasher};
+                    let mut hasher = DefaultHasher::new();
+                    message.topic.hash(&mut hasher);
+                    message.data.hash(&mut hasher);
+                    gossipsub::MessageId::from(hasher.finish().to_be_bytes().to_vec())
+                })
                 .build()
                 .expect("gossipsub config valid");
             let mut gossipsub = gossipsub::Behaviour::new(
@@ -297,10 +366,11 @@ fn build_swarm(_config: &NodeConfig) -> anyhow::Result<Swarm<DeAIBehaviour>> {
 // ---------------------------------------------------------------------------
 
 async fn swarm_task(
-    mut swarm: Swarm<DeAIBehaviour>,
-    mut cmd_rx: mpsc::Receiver<SwarmCommand>,
-    event_tx: mpsc::Sender<P2PEvent>,
-    config: NodeConfig,
+    mut swarm:   Swarm<DeAIBehaviour>,
+    mut cmd_rx:  mpsc::Receiver<SwarmCommand>,
+    event_tx:    mpsc::Sender<P2PEvent>,
+    config:      NodeConfig,
+    own_caps:    NodeCapabilities,
 ) {
     // Bind listen address
     let listen_addr: Multiaddr = format!("/ip4/0.0.0.0/tcp/{}", config.network.listen_port)
@@ -329,13 +399,24 @@ async fn swarm_task(
 
     // Track topic hash → model_id for model-specific inference topics
     let mut model_topics: HashMap<libp2p::gossipsub::TopicHash, String> = HashMap::new();
+    let mut announce_seq: u64 = 0;
+
+    // Announce our capabilities periodically so peers that join later learn about us.
+    let mut announce_interval = tokio::time::interval(Duration::from_secs(15));
+    announce_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    announce_interval.tick().await; // consume the immediate first tick
 
     loop {
         tokio::select! {
+            // ---- periodic capability announce ----
+            _ = announce_interval.tick() => {
+                publish_announce(&own_caps, &mut announce_seq, &mut swarm);
+            }
+
             // ---- swarm events ----
             event = swarm.next() => {
                 let Some(event) = event else { break };
-                handle_swarm_event(event, &event_tx, &mut model_topics).await;
+                handle_swarm_event(event, &event_tx, &mut model_topics, &mut swarm, &own_caps, &mut announce_seq).await;
             }
 
             // ---- commands from the rest of the node ----
@@ -380,7 +461,9 @@ fn handle_command(
                 // Model-specific publish is best-effort (not all nodes subscribe to
                 // every model). Ignore InsufficientPeers on this topic.
                 if let Err(e) = swarm.behaviour_mut().gossipsub.publish(model_topic, payload.clone()) {
-                    if !matches!(e, gossipsub::PublishError::InsufficientPeers) {
+                    // InsufficientPeers and Duplicate are both fine on the model topic —
+                    // the any-topic below is the required delivery path.
+                    if !matches!(e, gossipsub::PublishError::InsufficientPeers | gossipsub::PublishError::Duplicate) {
                         return Err(anyhow::anyhow!("model-topic publish: {e}"));
                     }
                 }
@@ -423,9 +506,10 @@ fn handle_command(
 
         SwarmCommand::AnnounceCapabilities { caps, resp } => {
             let result = (|| -> anyhow::Result<()> {
-                let payload = serde_json::to_vec(&caps)?;
-                let topic   = topics::node_announce_topic();
-                swarm.behaviour_mut().gossipsub.publish(topic, payload)?;
+                // Use a high starting seq so cmd-triggered announces don't
+                // collide with the periodic ones (which start at 1).
+                let mut one_shot_seq: u64 = u64::MAX / 2;
+                publish_announce(&caps, &mut one_shot_seq, swarm);
                 Ok(())
             })();
             let _ = resp.send(result);
@@ -454,9 +538,12 @@ fn handle_command(
 // ---------------------------------------------------------------------------
 
 async fn handle_swarm_event(
-    event: SwarmEvent<crate::behaviour::DeAIBehaviourEvent>,
-    event_tx: &mpsc::Sender<P2PEvent>,
+    event:        SwarmEvent<crate::behaviour::DeAIBehaviourEvent>,
+    event_tx:     &mpsc::Sender<P2PEvent>,
     model_topics: &HashMap<libp2p::gossipsub::TopicHash, String>,
+    swarm:        &mut Swarm<DeAIBehaviour>,
+    own_caps:     &NodeCapabilities,
+    announce_seq: &mut u64,
 ) {
     match event {
         SwarmEvent::NewListenAddr { address, .. } => {
@@ -483,6 +570,11 @@ async fn handle_swarm_event(
             gossipsub::Event::Subscribed { peer_id, topic },
         )) => {
             debug!(%peer_id, %topic, "gossipsub: peer subscribed");
+            // Re-announce immediately when a peer joins the mesh on our topic.
+            if topic == topics::node_announce_topic().hash() {
+                info!(%peer_id, "peer subscribed to announce topic — re-announcing");
+                publish_announce(own_caps, announce_seq, swarm);
+            }
         }
 
         SwarmEvent::Behaviour(crate::behaviour::DeAIBehaviourEvent::Gossipsub(
@@ -501,7 +593,13 @@ async fn handle_swarm_event(
             mdns::Event::Discovered(peers),
         )) => {
             for (peer_id, addr) in peers {
-                debug!(%peer_id, %addr, "mDNS discovered peer");
+                info!(%peer_id, %addr, "mDNS discovered peer — dialing");
+                swarm.add_peer_address(peer_id, addr);
+                if !swarm.is_connected(&peer_id) {
+                    if let Err(e) = swarm.dial(peer_id) {
+                        warn!(%peer_id, %e, "mDNS: dial failed");
+                    }
+                }
             }
         }
 
@@ -562,10 +660,10 @@ async fn dispatch_gossipsub_message(
         }
 
         topics::KnownTopic::NodeAnnounce => {
-            if let Ok(caps) =
-                serde_json::from_slice::<NodeCapabilities>(&message.data)
+            if let Ok(envelope) =
+                serde_json::from_slice::<AnnounceEnvelope>(&message.data)
             {
-                let _ = event_tx.send(P2PEvent::NodeAnnounceReceived(caps)).await;
+                let _ = event_tx.send(P2PEvent::NodeAnnounceReceived(envelope.caps)).await;
             }
         }
 

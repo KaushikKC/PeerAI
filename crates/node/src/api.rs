@@ -854,7 +854,7 @@ async fn marketplace_request_handler(
         max_tokens:           body.max_tokens.unwrap_or(2048),
         temperature:          0.7,
         escrow_tx_id:         String::new(),
-        budget_nanox:         0,
+        budget_nanox:         u64::MAX, // marketplace discovery — no real escrow, just soliciting bids
         timestamp:            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
         client_peer_id:       "http-marketplace-client".into(),
         privacy_level:        PrivacyLevel::Standard,

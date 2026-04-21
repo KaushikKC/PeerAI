@@ -99,6 +99,8 @@ pub struct DeAIDaemon {
     peer_registry:  PeerRegistry,
     /// Bid collection channels registered by the marketplace HTTP handler.
     bid_collectors: BidCollectors,
+    /// Our own capabilities — re-broadcast on every new peer connection.
+    own_caps:       Option<NodeCapabilities>,
 }
 
 impl DeAIDaemon {
@@ -376,6 +378,7 @@ impl DeAIDaemon {
         );
 
         // ── P2P layer ─────────────────────────────────────────────────────────
+        let mut own_caps: Option<NodeCapabilities> = None;
         let p2p = match mode {
             OperationMode::Standalone => {
                 info!("P2P: disabled (standalone mode)");
@@ -383,27 +386,22 @@ impl DeAIDaemon {
             }
             _ => {
                 info!("P2P: starting");
-                let (svc, events) = p2p::build(&config).await?;
 
-                // Subscribe to inference topics for our available models
+                // Derive peer_id from the persisted keypair so we can build
+                // NodeCapabilities before starting the swarm.
+                let kp = p2p::load_or_create_keypair(&config.node.data_dir)?;
+                let peer_id_raw = kp.public().to_peer_id().to_string();
+
                 let available: Vec<String> = engine.list_available_models().await.unwrap_or_default();
-                for model_id in &available {
-                    if let Err(e) = svc.subscribe_model(model_id).await {
-                        warn!(%model_id, %e, "failed to subscribe model topic");
-                    }
-                }
-
-                // Announce our capabilities
-                let peer_id = svc.local_peer_id().await?;
-                // Load current reputation score from the store for announcement.
                 let reputation_score = reputation
-                    .get_score(&peer_id.to_string())
+                    .get_score(&peer_id_raw)
                     .await
                     .unwrap_or_default();
+
                 let caps = NodeCapabilities {
-                    peer_id:              peer_id.to_string(),
-                    models:               available,
-                    gpu_vram_mb:          0, // updated by health loop (Phase 9)
+                    peer_id:              peer_id_raw,
+                    models:               available.clone(),
+                    gpu_vram_mb:          0,
                     gpu_type:             GpuType::Cpu,
                     region:               None,
                     tee_enabled:          config.privacy.tee_enabled,
@@ -420,9 +418,17 @@ impl DeAIDaemon {
                         .collect(),
                     api_url:              config.health.api_url.clone(),
                 };
-                // Best-effort announce — may fail if no peers yet
-                let _ = svc.announce_capabilities(&caps).await;
 
+                let (svc, events) = p2p::build(&config, caps.clone()).await?;
+
+                // Subscribe to inference topics for our available models
+                for model_id in &available {
+                    if let Err(e) = svc.subscribe_model(model_id).await {
+                        warn!(%model_id, %e, "failed to subscribe model topic");
+                    }
+                }
+
+                own_caps = Some(caps);
                 Some((svc, events))
             }
         };
@@ -445,6 +451,7 @@ impl DeAIDaemon {
             rep_root_rx,
             peer_registry,
             bid_collectors,
+            own_caps,
         })
     }
 
@@ -522,9 +529,10 @@ impl DeAIDaemon {
             let peer_registry  = Arc::clone(&self.peer_registry);
             let bid_collectors = Arc::clone(&self.bid_collectors);
 
+            let own_caps = self.own_caps.take().expect("own_caps set in network mode");
             tokio::select! {
                 _ = event_loop(svc, &mut events, bid_engine, scheduler, payment,
-                               peer_registry, bid_collectors) => {}
+                               peer_registry, bid_collectors, own_caps) => {}
                 _ = tokio::signal::ctrl_c() => {
                     info!("shutdown signal received");
                 }
@@ -559,6 +567,7 @@ async fn event_loop(
     payment:        Arc<dyn PaymentBackend>,
     peer_registry:  PeerRegistry,
     bid_collectors: BidCollectors,
+    own_caps:       NodeCapabilities,
 ) {
     while let Some(event) = events.recv().await {
         match event {
