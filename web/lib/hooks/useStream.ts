@@ -5,6 +5,7 @@ import { streamInfer, type InferRequest, type InferenceReceipt } from '../daemon
 import {
   appendMessage,
   updateLastAssistantMessage,
+  getSession,
   type SessionRecord,
   type MessageReceipt,
 } from '../session-store';
@@ -33,9 +34,12 @@ export function useStream(
 
       // Append user message immediately
       appendMessage(session.id, { role: 'user', content: userText });
-
       // Placeholder assistant message
       appendMessage(session.id, { role: 'assistant', content: '' });
+
+      // Show user message in UI right away — don't wait for stream to finish
+      const afterAppend = getSession(session.id);
+      if (afterAppend) onUpdate(afterAppend);
 
       setState({ streaming: true, streamingText: '', error: null });
 
@@ -82,8 +86,6 @@ export function useStream(
         updateLastAssistantMessage(session.id, `[Error: ${msg}]`);
         setState({ streaming: false, streamingText: '', error: msg });
       } finally {
-        // Trigger re-read of the session from localStorage
-        const { getSession } = await import('../session-store');
         const updated = getSession(session.id);
         if (updated) onUpdate(updated);
       }
