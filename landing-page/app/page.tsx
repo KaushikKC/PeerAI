@@ -605,8 +605,8 @@ export default function Home() {
         <div className="problems grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="prob reveal">
             <div>
-              <div className="prob-num"><span>01 — Context exposure</span><span className="tag">G1</span></div>
-              <div className="prob-visual">
+              <div className="flex justify-between items-center font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3) mb-6"><span>01 — Context exposure</span><span className="tag">G1</span></div>
+              <div className="h-[140px] my-3 relative grid place-items-center">
                 <div className="viz-choke">
                   <svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid meet">
                     <line x1="30" y1="20" x2="100" y2="70"/>
@@ -621,26 +621,26 @@ export default function Home() {
                   <div className="node center"></div>
                 </div>
               </div>
-              <h3>Provider sees (P, C, R)</h3>
-              <p>Every prompt, every accumulated context, every response flows through one party. Pinaivu AI keeps the full session `C` encrypted under a client-held key `K`; the GPU node sees only the decrypted context window for the current turn.</p>
+              <h3 className="font-display font-normal text-[1.65rem] leading-[1.1] tracking-[-0.02em] mb-3 [font-variation-settings:'opsz'_144]">Provider sees (P, C, R)</h3>
+              <p className="text-[0.88rem] text-(--fg-2) leading-[1.65]">Every prompt, every accumulated context, every response flows through one party. Pinaivu AI keeps the full session `C` encrypted under a client-held key `K`; the GPU node sees only the decrypted context window for the current turn.</p>
             </div>
             <div className="corner tl"><CornerSVG/></div><div className="corner tr"><CornerSVG/></div><div className="corner bl"><CornerSVG/></div><div className="corner br"><CornerSVG/></div>
           </div>
           <div className="prob reveal reveal-d1">
             <div>
-              <div className="prob-num"><span>02 — Chain dependence</span><span className="tag">G3</span></div>
-              <div className="prob-visual"><div className="viz-lock"><div className="viz-lock-shape"></div></div></div>
-              <h3>One token, one ecosystem</h3>
-              <p>Bittensor collapses without TAO. Every prior decentralised inference system grounds trust in a specific chain, token and validator set. Pinaivu AI&apos;s trust model is self-sufficient; any chain is an optional settlement adapter selected in a TOML file.</p>
+              <div className="flex justify-between items-center font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3) mb-6"><span>02 — Chain dependence</span><span className="tag">G3</span></div>
+              <div className="h-[140px] my-3 relative grid place-items-center"><div className="viz-lock"><div className="viz-lock-shape"></div></div></div>
+              <h3 className="font-display font-normal text-[1.65rem] leading-[1.1] tracking-[-0.02em] mb-3 [font-variation-settings:'opsz'_144]">One token, one ecosystem</h3>
+              <p className="text-[0.88rem] text-(--fg-2) leading-[1.65]">Bittensor collapses without TAO. Every prior decentralised inference system grounds trust in a specific chain, token and validator set. Pinaivu AI&apos;s trust model is self-sufficient; any chain is an optional settlement adapter selected in a TOML file.</p>
             </div>
             <div className="corner tl"><CornerSVG/></div><div className="corner tr"><CornerSVG/></div><div className="corner bl"><CornerSVG/></div><div className="corner br"><CornerSVG/></div>
           </div>
           <div className="prob reveal reveal-d2">
             <div>
-              <div className="prob-num"><span>03 — Unverifiable work</span><span className="tag">G2</span></div>
-              <div className="prob-visual"><div className="viz-down"><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div></div></div>
-              <h3>No receipt, no recourse</h3>
-              <p>Batch marketplaces (io.net, Akash) and routers (Fortytwo) can&apos;t prove node N ran job J at the claimed parameters. Pinaivu AI ships every response with a self-verifiable ProofOfInference &mdash; Ed25519-signed, offline checkable, binding on (model, tokens, Δ, H_in, H_out).</p>
+              <div className="flex justify-between items-center font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3) mb-6"><span>03 — Unverifiable work</span><span className="tag">G2</span></div>
+              <div className="h-[140px] my-3 relative grid place-items-center"><div className="viz-down"><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div><div className="bar"></div></div></div>
+              <h3 className="font-display font-normal text-[1.65rem] leading-[1.1] tracking-[-0.02em] mb-3 [font-variation-settings:'opsz'_144]">No receipt, no recourse</h3>
+              <p className="text-[0.88rem] text-(--fg-2) leading-[1.65]">Batch marketplaces (io.net, Akash) and routers (Fortytwo) can&apos;t prove node N ran job J at the claimed parameters. Pinaivu AI ships every response with a self-verifiable ProofOfInference &mdash; Ed25519-signed, offline checkable, binding on (model, tokens, Δ, H_in, H_out).</p>
             </div>
             <div className="corner tl"><CornerSVG/></div><div className="corner tr"><CornerSVG/></div><div className="corner bl"><CornerSVG/></div><div className="corner br"><CornerSVG/></div>
           </div>
@@ -659,63 +659,63 @@ export default function Home() {
         <div className="features grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="feat reveal">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 06 · Application</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 06 · Application</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
               </div>
-              <h3>OpenAI-compatible surface</h3>
-              <p>TypeScript SDK, drop-in HTTP API, Web UI. Change the base URL; keep your code. Streaming, sessions and proof retrieval are native.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">OpenAI-compatible surface</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">TypeScript SDK, drop-in HTTP API, Web UI. Change the base URL; keep your code. Streaming, sessions and proof retrieval are native.</p>
             </div>
-            <div className="feat-foot">TS SDK · HTTP · Web UI <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">TS SDK · HTTP · Web UI <span className="arrow">→</span></div>
           </div>
           <div className="feat reveal reveal-d1">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 05 · Session</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 05 · Session</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div>
               </div>
-              <h3>E2E encrypted memory</h3>
-              <p>Full history `C` is AES-256-GCM encrypted under a client-held `K`. The GPU node decrypts only the active context window &mdash; never `C`, never `K`.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">E2E encrypted memory</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">Full history `C` is AES-256-GCM encrypted under a client-held `K`. The GPU node decrypts only the active context window &mdash; never `C`, never `K`.</p>
             </div>
-            <div className="feat-foot">AES-GCM · X25519 · Portable <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">AES-GCM · X25519 · Portable <span className="arrow">→</span></div>
           </div>
           <div className="feat reveal reveal-d2">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 04 · Reputation</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><path d="M12 10V8M12 16v-2M10 12H8M16 12h-2"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 04 · Reputation</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><path d="M12 10V8M12 16v-2M10 12H8M16 12h-2"/></svg></div>
               </div>
-              <h3>Merkle tree, gossiped</h3>
-              <p>Every node keeps a Merkle tree of its signed proofs. The root is broadcast over libp2p gossipsub every 10 min. Chain anchoring is optional.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">Merkle tree, gossiped</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">Every node keeps a Merkle tree of its signed proofs. The root is broadcast over libp2p gossipsub every 10 min. Chain anchoring is optional.</p>
             </div>
-            <div className="feat-foot">SHA-256 · Gossipsub · O(log n) <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">SHA-256 · Gossipsub · O(log n) <span className="arrow">→</span></div>
           </div>
           <div className="feat reveal">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 03 · Marketplace</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 12l9-9 9 9-9 9z"/><path d="M8 12h8M12 8v8"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 03 · Marketplace</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 12l9-9 9 9-9 9z"/><path d="M8 12h8M12 8v8"/></svg></div>
               </div>
-              <h3>200ms sealed-bid auction</h3>
-              <p>Client broadcasts request; nodes pass six cheap-to-expensive checks and submit a bid. Composite score (0.4×price + 0.3×latency + 0.3×rep) picks the winner.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">200ms sealed-bid auction</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">Client broadcasts request; nodes pass six cheap-to-expensive checks and submit a bid. Composite score (0.4×price + 0.3×latency + 0.3×rep) picks the winner.</p>
             </div>
-            <div className="feat-foot">libp2p · Sealed-bid · First-price <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">libp2p · Sealed-bid · First-price <span className="arrow">→</span></div>
           </div>
           <div className="feat reveal reveal-d1">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 02 · Settlement</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/><path d="M6 10v4M18 10v4"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 02 · Settlement</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/><path d="M6 10v4M18 10v4"/></svg></div>
               </div>
-              <h3>Pluggable escrow</h3>
-              <p>Five adapters: free, signed-receipt, off-chain channel, Sui, EVM. Pick in TOML; same binary. Payment channels amortise gas 50× over 100 requests.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">Pluggable escrow</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">Five adapters: free, signed-receipt, off-chain channel, Sui, EVM. Pick in TOML; same binary. Payment channels amortise gas 50× over 100 requests.</p>
             </div>
-            <div className="feat-foot">free · receipt · channel · sui · evm <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">free · receipt · channel · sui · evm <span className="arrow">→</span></div>
           </div>
           <div className="feat reveal reveal-d2">
             <div>
-              <div className="feat-hd"><div className="feat-idx">L · 01 · Storage</div>
-                <div className="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/><path d="M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg></div>
+              <div className="flex justify-between items-start mb-[30px]"><div className="font-mono text-[0.58rem] tracking-[0.25em] text-(--fg-3)">L · 01 · Storage</div>
+                <div className="feat-icon w-11 h-11"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v14c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/><path d="M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg></div>
               </div>
-              <h3>Content-addressed, agnostic</h3>
-              <p>Three-method interface: put/get/delete. Local, IPFS, Walrus, Memory &mdash; same protocol. SHA-256 IDs mean put(b)=put(b) deduplicates for free.</p>
+              <h3 className="font-display font-normal text-[1.5rem] leading-[1.15] tracking-[-0.02em] mb-2.5 [font-variation-settings:'opsz'_144]">Content-addressed, agnostic</h3>
+              <p className="text-[0.86rem] text-(--fg-2) leading-[1.65] mb-5">Three-method interface: put/get/delete. Local, IPFS, Walrus, Memory &mdash; same protocol. SHA-256 IDs mean put(b)=put(b) deduplicates for free.</p>
             </div>
-            <div className="feat-foot">local · ipfs · walrus <span className="arrow">→</span></div>
+            <div className="feat-foot font-mono text-[0.56rem] tracking-[0.2em] text-(--fg-3) uppercase">local · ipfs · walrus <span className="arrow">→</span></div>
           </div>
         </div>
       </section>
@@ -729,43 +729,43 @@ export default function Home() {
           </div>
           <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Four stages. Each one cryptographically verifiable — from the sealed-bid auction through Ed25519-signed proof delivery.</p>
         </div>
-        <div className="flow-diagram">
-          <div className="flow-stage" id="flowStage">
+        <div className="flow-diagram border border-(--line) py-[88px] px-12 bg-(--bg-1) relative overflow-hidden min-h-[560px] max-[720px]:px-[18px] max-[720px]:py-11">
+          <div className="flow-stage relative grid grid-cols-4 gap-0 max-w-[1100px] mx-auto z-[1] max-xl:grid-cols-2 max-xl:gap-y-8 max-[720px]:grid-cols-1 max-[720px]:gap-0" id="flowStage">
             <div className="flow-step">
               <div className="flow-node">
-                <span className="flow-num">1</span>
+                <span className="flow-num absolute -top-2.5 -right-2.5 size-7 rounded-full bg-(--inv) text-(--inv-fg) grid place-items-center font-mono text-[0.6rem] font-bold z-[2]">1</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2v14"/><path d="M6 12l6 6 6-6"/><rect x="4" y="18" width="16" height="4"/></svg>
               </div>
-              <div className="flow-label">Step 01 · ~5ms</div>
-              <h4>Broadcast</h4>
-              <p>Client broadcasts an InferenceRequest on the gossipsub topic for the required model, carrying model ID, budget, and privacy level — not the context (that stays client-side until a winner is chosen).</p>
+              <div className="font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3) mb-2">Step 01 · ~5ms</div>
+              <h4 className="font-display font-medium text-[1.1rem] mb-2 [font-variation-settings:'opsz'_144]">Broadcast</h4>
+              <p className="text-[0.78rem] text-(--fg-2) leading-[1.55]">Client broadcasts an InferenceRequest on the gossipsub topic for the required model, carrying model ID, budget, and privacy level — not the context (that stays client-side until a winner is chosen).</p>
             </div>
             <div className="flow-step">
               <div className="flow-node">
-                <span className="flow-num">2</span>
+                <span className="flow-num absolute -top-2.5 -right-2.5 size-7 rounded-full bg-(--inv) text-(--inv-fg) grid place-items-center font-mono text-[0.6rem] font-bold z-[2]">2</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
               </div>
-              <div className="flow-label">Step 02 · 200ms</div>
-              <h4>Sealed-bid Auction</h4>
-              <p>GPU nodes pass six checks (model, capacity, queue, budget, privacy, throttle) and submit bids. Client picks winner by composite score: 0.4×price + 0.3×latency + 0.3×reputation.</p>
+              <div className="font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3) mb-2">Step 02 · 200ms</div>
+              <h4 className="font-display font-medium text-[1.1rem] mb-2 [font-variation-settings:'opsz'_144]">Sealed-bid Auction</h4>
+              <p className="text-[0.78rem] text-(--fg-2) leading-[1.55]">GPU nodes pass six checks (model, capacity, queue, budget, privacy, throttle) and submit bids. Client picks winner by composite score: 0.4×price + 0.3×latency + 0.3×reputation.</p>
             </div>
             <div className="flow-step">
               <div className="flow-node">
-                <span className="flow-num">3</span>
+                <span className="flow-num absolute -top-2.5 -right-2.5 size-7 rounded-full bg-(--inv) text-(--inv-fg) grid place-items-center font-mono text-[0.6rem] font-bold z-[2]">3</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 20h8M12 16v4"/><line x1="7" y1="8" x2="7" y2="12"/><line x1="11" y1="8" x2="11" y2="12"/><line x1="15" y1="8" x2="15" y2="12"/></svg>
               </div>
-              <div className="flow-label">Step 03 · ~620ms</div>
-              <h4>Inference</h4>
-              <p>Client encrypts the context window W for the winning node via X25519 DH and sends it directly to that node&apos;s API. Node decrypts W in RAM, runs inference, streams tokens back, then zeroes W.</p>
+              <div className="font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3) mb-2">Step 03 · ~620ms</div>
+              <h4 className="font-display font-medium text-[1.1rem] mb-2 [font-variation-settings:'opsz'_144]">Inference</h4>
+              <p className="text-[0.78rem] text-(--fg-2) leading-[1.55]">Client encrypts the context window W for the winning node via X25519 DH and sends it directly to that node&apos;s API. Node decrypts W in RAM, runs inference, streams tokens back, then zeroes W.</p>
             </div>
             <div className="flow-step">
               <div className="flow-node">
-                <span className="flow-num">4</span>
+                <span className="flow-num absolute -top-2.5 -right-2.5 size-7 rounded-full bg-(--inv) text-(--inv-fg) grid place-items-center font-mono text-[0.6rem] font-bold z-[2]">4</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12l5 5 9-9"/><circle cx="12" cy="12" r="10"/></svg>
               </div>
-              <div className="flow-label">Step 04 · ~20ms</div>
-              <h4>Proof + Settle</h4>
-              <p>Node signs ProofOfInference π binding (model, tokens, Δ, H_in, H_out) with Ed25519. π is appended to the node&apos;s Merkle tree. Settlement adapter executes and ships π to the client.</p>
+              <div className="font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3) mb-2">Step 04 · ~20ms</div>
+              <h4 className="font-display font-medium text-[1.1rem] mb-2 [font-variation-settings:'opsz'_144]">Proof + Settle</h4>
+              <p className="text-[0.78rem] text-(--fg-2) leading-[1.55]">Node signs ProofOfInference π binding (model, tokens, Δ, H_in, H_out) with Ed25519. π is appended to the node&apos;s Merkle tree. Settlement adapter executes and ships π to the client.</p>
             </div>
           </div>
           <div className="mt-12 grid grid-cols-3 border-t border-(--line) pt-8">
@@ -811,14 +811,14 @@ export default function Home() {
               <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
                   <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">LLM</span><span className="pill">Text</span><span className="pill">FP16 · INT8 · INT4</span></div>
-                  <h3>Llama 3.1 · 405B</h3>
-                  <div className="author">Meta · Open weights · Released Jul 2024</div>
-                  <p>The largest open LLM running on the network. Sharded across 16 consumer GPUs via tensor parallel. Competitive with GPT-4 on most benchmarks at a fraction of the cost.</p>
+                  <h3 className="font-display font-normal text-[2.4rem] leading-none tracking-[-0.025em] mb-3 [font-variation-settings:'opsz'_144]">Llama 3.1 · 405B</h3>
+                  <div className="font-mono text-[0.72rem] text-(--fg-2) mb-6">Meta · Open weights · Released Jul 2024</div>
+                  <p className="text-[0.92rem] text-(--fg-2) leading-[1.6] mb-7 max-w-[440px]">The largest open LLM running on the network. Sharded across 16 consumer GPUs via tensor parallel. Competitive with GPT-4 on most benchmarks at a fraction of the cost.</p>
                 </div>
                 <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Parameters</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">405<span className="dim">B</span></div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Context</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">128<span className="dim">K tokens</span></div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Throughput</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">42<span className="dim"> tok/s</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Parameters</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">405<span className="text-(--fg-2) font-normal">B</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Context</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">128<span className="text-(--fg-2) font-normal">K tokens</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Throughput</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">42<span className="text-(--fg-2) font-normal"> tok/s</span></div></div>
                   <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / 1K</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.003</div></div>
                 </div>
               </div>
@@ -835,14 +835,14 @@ export default function Home() {
               <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
                   <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">Vision</span><span className="pill">Diffusion</span><span className="pill">1024²</span></div>
-                  <h3>FLUX.1 · Pro</h3>
-                  <div className="author">Black Forest Labs · Open weights · Aug 2024</div>
-                  <p>State-of-the-art text-to-image at 1024² native resolution. Runs on a single consumer GPU. 4-step Turbo variant generates in under 1 second per image.</p>
+                  <h3 className="font-display font-normal text-[2.4rem] leading-none tracking-[-0.025em] mb-3 [font-variation-settings:'opsz'_144]">FLUX.1 · Pro</h3>
+                  <div className="font-mono text-[0.72rem] text-(--fg-2) mb-6">Black Forest Labs · Open weights · Aug 2024</div>
+                  <p className="text-[0.92rem] text-(--fg-2) leading-[1.6] mb-7 max-w-[440px]">State-of-the-art text-to-image at 1024² native resolution. Runs on a single consumer GPU. 4-step Turbo variant generates in under 1 second per image.</p>
                 </div>
                 <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Resolution</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">1024<span className="dim">×1024</span></div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Steps</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">4<span className="dim"> (turbo)</span></div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Latency</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">2.1<span className="dim">s</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Resolution</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">1024<span className="text-(--fg-2) font-normal">×1024</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Steps</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">4<span className="text-(--fg-2) font-normal"> (turbo)</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Latency</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">2.1<span className="text-(--fg-2) font-normal">s</span></div></div>
                   <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / img</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.004</div></div>
                 </div>
               </div>
@@ -859,14 +859,14 @@ export default function Home() {
               <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
                   <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">Audio</span><span className="pill">STT</span><span className="pill">Streaming</span></div>
-                  <h3>Whisper · Large v3</h3>
-                  <div className="author">OpenAI · Open weights · MIT license</div>
-                  <p>99-language speech-to-text with automatic language detection. Runs 52× realtime on an RTX 3090. Native WebSocket streaming for voice applications.</p>
+                  <h3 className="font-display font-normal text-[2.4rem] leading-none tracking-[-0.025em] mb-3 [font-variation-settings:'opsz'_144]">Whisper · Large v3</h3>
+                  <div className="font-mono text-[0.72rem] text-(--fg-2) mb-6">OpenAI · Open weights · MIT license</div>
+                  <p className="text-[0.92rem] text-(--fg-2) leading-[1.6] mb-7 max-w-[440px]">99-language speech-to-text with automatic language detection. Runs 52× realtime on an RTX 3090. Native WebSocket streaming for voice applications.</p>
                 </div>
                 <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
                   <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Languages</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">99</div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Speed</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">52×<span className="dim"> realtime</span></div></div>
-                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">TTFT</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">&lt;300<span className="dim">ms</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Speed</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">52×<span className="text-(--fg-2) font-normal"> realtime</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">TTFT</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">&lt;300<span className="text-(--fg-2) font-normal">ms</span></div></div>
                   <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / min</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.001</div></div>
                 </div>
               </div>
@@ -893,62 +893,62 @@ export default function Home() {
           <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Every prior system either lacks G2 (no verifiable accountability) or sacrifices G3/G4 (hard-coded chain and storage). Pinaivu AI is the first to satisfy all five guarantees simultaneously.</p>
         </div>
         <div className="px-(--content-pad) max-w-(--content-max) mx-auto">
-          <div className="compare-box reveal">
-            <div className="compare-row head">
-              <div className="compare-cell">Property</div>
-              <div className="compare-cell">Pinaivu AI</div>
-              <div className="compare-cell">Bittensor</div>
-              <div className="compare-cell">QVAC</div>
-              <div className="compare-cell">io.net</div>
-              <div className="compare-cell">Fortytwo</div>
+          <div className="compare-box border border-(--line) bg-(--bg-1) overflow-hidden reveal">
+            <div className="compare-row head grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">Property</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">Pinaivu AI</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">Bittensor</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">QVAC</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">io.net</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">Fortytwo</div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">G1 — Session privacy</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> AES-256-GCM</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Validators see all</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Not addressed</div>
-              <div className="compare-cell no">N/A · batch only</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Centralised</div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">G1 — Session privacy</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> AES-256-GCM</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Validators see all</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Not addressed</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)">N/A · batch only</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Centralised</div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">G2 — Node accountability</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> Ed25519 + Merkle</div>
-              <div className="compare-cell">Partial · validators</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">G2 — Node accountability</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> Ed25519 + Merkle</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">Partial · validators</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> No receipts</div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">G3 — Settlement neutrality</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> 5 adapters</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> TAO only</div>
-              <div className="compare-cell">No payment</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> IO token</div>
-              <div className="compare-cell">N/A · centralised</div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">G3 — Settlement neutrality</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> 5 adapters</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> TAO only</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">No payment</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> IO token</div>
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2">N/A · centralised</div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">G5 — Permissionless</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> PeerId = pk_N</div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> KYC required</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Centralised</div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">G5 — Permissionless</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> PeerId = pk_N</div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> KYC required</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg> Centralised</div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">Persistent sessions</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> E2E encrypted</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">Persistent sessions</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> E2E encrypted</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
             </div>
-            <div className="compare-row">
-              <div className="compare-cell"><span className="rowtitle">Streaming responses</span></div>
-              <div className="compare-cell yes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> Native WebSocket</div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
-              <div className="compare-cell no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+            <div className="compare-row grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] border-b border-(--line) transition-colors duration-200">
+              <div className="compare-cell px-6 py-5 border-r border-(--line) text-[0.86rem] text-(--fg-2) flex items-center gap-2"><span className="rowtitle">Streaming responses</span></div>
+              <div className="compare-cell yes px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12l5 5 9-9"/></svg> Native WebSocket</div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
+              <div className="compare-cell no px-6 py-5 border-r border-(--line) text-[0.86rem] flex items-center gap-2 text-(--fg-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg></div>
             </div>
           </div>
         </div>
@@ -965,34 +965,34 @@ export default function Home() {
         </div>
         <div className="tech grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="tech-item reveal">
-            <div className="tech-hd"><h4>libp2p Transport</h4><div className="tech-ord">T · 01</div></div>
-            <p>TCP + QUIC dual-stack with Noise authenticated encryption and Yamux stream multiplexing. AutoNAT traversal means any home node can participate without port-forwarding.</p>
-            <div className="tech-tags"><span className="tech-tag">TCP</span><span className="tech-tag">QUIC</span><span className="tech-tag">Noise</span><span className="tech-tag">Yamux</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">libp2p Transport</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 01</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">TCP + QUIC dual-stack with Noise authenticated encryption and Yamux stream multiplexing. AutoNAT traversal means any home node can participate without port-forwarding.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">TCP</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">QUIC</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Noise</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Yamux</span></div>
           </div>
           <div className="tech-item reveal reveal-d1">
-            <div className="tech-hd"><h4>Kademlia DHT + Gossipsub</h4><div className="tech-ord">T · 02</div></div>
-            <p>Kademlia DHT for peer routing and mDNS for local discovery. Five gossipsub topics carry inference requests, bids, announcements and Merkle root broadcasts.</p>
-            <div className="tech-tags"><span className="tech-tag">Kademlia</span><span className="tech-tag">mDNS</span><span className="tech-tag">Gossipsub</span><span className="tech-tag">5 topics</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">Kademlia DHT + Gossipsub</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 02</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">Kademlia DHT for peer routing and mDNS for local discovery. Five gossipsub topics carry inference requests, bids, announcements and Merkle root broadcasts.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Kademlia</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">mDNS</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Gossipsub</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">5 topics</span></div>
           </div>
           <div className="tech-item reveal reveal-d2">
-            <div className="tech-hd"><h4>Ed25519 Identity</h4><div className="tech-ord">T · 03</div></div>
-            <p>Every node is an Ed25519 keypair. The libp2p PeerId is derived from pk_N — no separate account or wallet needed. 128-bit security per RFC 8032.</p>
-            <div className="tech-tags"><span className="tech-tag">Ed25519</span><span className="tech-tag">RFC 8032</span><span className="tech-tag">128-bit security</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">Ed25519 Identity</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 03</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">Every node is an Ed25519 keypair. The libp2p PeerId is derived from pk_N — no separate account or wallet needed. 128-bit security per RFC 8032.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Ed25519</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">RFC 8032</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">128-bit security</span></div>
           </div>
           <div className="tech-item reveal">
-            <div className="tech-hd"><h4>ProofOfInference</h4><div className="tech-ord">T · 04</div></div>
-            <p>A signed execution receipt bound to (model, tokens, latency, H_in, H_out). Verifiable offline with only the node&apos;s public key. Constant-time O(1) verification, no network call.</p>
-            <div className="tech-tags"><span className="tech-tag">Ed25519 σ</span><span className="tech-tag">SHA-256 H_in/H_out</span><span className="tech-tag">Offline</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">ProofOfInference</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 04</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">A signed execution receipt bound to (model, tokens, latency, H_in, H_out). Verifiable offline with only the node&apos;s public key. Constant-time O(1) verification, no network call.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Ed25519 σ</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">SHA-256 H_in/H_out</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">Offline</span></div>
           </div>
           <div className="tech-item reveal reveal-d1">
-            <div className="tech-hd"><h4>AES-256-GCM Sessions</h4><div className="tech-ord">T · 05</div></div>
-            <p>Session context encrypted under a client-held key K derived from X25519 DH. The GPU node never sees K — only the current-turn context window, zeroed from RAM after inference.</p>
-            <div className="tech-tags"><span className="tech-tag">AES-256-GCM</span><span className="tech-tag">X25519</span><span className="tech-tag">96-bit nonce</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">AES-256-GCM Sessions</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 05</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">Session context encrypted under a client-held key K derived from X25519 DH. The GPU node never sees K — only the current-turn context window, zeroed from RAM after inference.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">AES-256-GCM</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">X25519</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">96-bit nonce</span></div>
           </div>
           <div className="tech-item reveal reveal-d2">
-            <div className="tech-hd"><h4>Settlement Adapters</h4><div className="tech-ord">T · 06</div></div>
-            <p>Five adapters behind one interface: free, signed-receipt, off-chain payment channel, Sui (Phase D), EVM (Phase E). All selected by a single TOML key — same binary, zero code changes.</p>
-            <div className="tech-tags"><span className="tech-tag">free</span><span className="tech-tag">receipt</span><span className="tech-tag">channel</span><span className="tech-tag">sui</span><span className="tech-tag">evm</span></div>
+            <div className="flex justify-between items-start mb-5 gap-4"><h4 className="font-display font-medium text-[1.25rem] tracking-[-0.015em] [font-variation-settings:'opsz'_144]">Settlement Adapters</h4><div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3)">T · 06</div></div>
+            <p className="text-[0.84rem] text-(--fg-2) leading-[1.65] mb-[18px]">Five adapters behind one interface: free, signed-receipt, off-chain payment channel, Sui (Phase D), EVM (Phase E). All selected by a single TOML key — same binary, zero code changes.</p>
+            <div className="flex flex-wrap gap-1.5"><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">free</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">receipt</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">channel</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">sui</span><span className="tech-tag font-mono text-[0.54rem] tracking-[0.18em] uppercase px-2 py-1 text-(--fg-2)">evm</span></div>
           </div>
         </div>
       </section>
@@ -1009,38 +1009,38 @@ export default function Home() {
         <div className="hw grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto" id="hwGrid">
           <div className="hw-card reveal" style={{'--pct':'68%'} as React.CSSProperties}>
             <div className="hw-visual"><div className="hw-chip"><span className="dot"></span></div></div>
-            <div className="hw-name">RTX 4090</div>
-            <div className="hw-spec">24GB · 82.6 TFLOPS</div>
-            <div className="hw-bar">
-              <div className="hw-bar-lbl"><span>Network share</span><span>68%</span></div>
-              <div className="hw-bar-track"><div className="hw-bar-fill"></div></div>
+            <div className="font-display font-medium text-[1.25rem] mb-1.5 tracking-[-0.015em] [font-variation-settings:'opsz'_144]">RTX 4090</div>
+            <div className="font-mono text-[0.62rem] tracking-[0.05em] text-(--fg-2) mb-5">24GB · 82.6 TFLOPS</div>
+            <div className="mt-auto">
+              <div className="flex justify-between font-mono text-[0.52rem] tracking-[0.2em] uppercase text-(--fg-3) mb-2"><span>Network share</span><span>68%</span></div>
+              <div className="h-1 bg-(--fg-5) relative overflow-hidden"><div className="hw-bar-fill"></div></div>
             </div>
           </div>
           <div className="hw-card reveal reveal-d1" style={{'--pct':'18%'} as React.CSSProperties}>
             <div className="hw-visual"><div className="hw-chip"><span className="dot"></span></div></div>
-            <div className="hw-name">RTX 3090</div>
-            <div className="hw-spec">24GB · 35.6 TFLOPS</div>
-            <div className="hw-bar">
-              <div className="hw-bar-lbl"><span>Network share</span><span>18%</span></div>
-              <div className="hw-bar-track"><div className="hw-bar-fill"></div></div>
+            <div className="font-display font-medium text-[1.25rem] mb-1.5 tracking-[-0.015em] [font-variation-settings:'opsz'_144]">RTX 3090</div>
+            <div className="font-mono text-[0.62rem] tracking-[0.05em] text-(--fg-2) mb-5">24GB · 35.6 TFLOPS</div>
+            <div className="mt-auto">
+              <div className="flex justify-between font-mono text-[0.52rem] tracking-[0.2em] uppercase text-(--fg-3) mb-2"><span>Network share</span><span>18%</span></div>
+              <div className="h-1 bg-(--fg-5) relative overflow-hidden"><div className="hw-bar-fill"></div></div>
             </div>
           </div>
           <div className="hw-card reveal reveal-d2" style={{'--pct':'9%'} as React.CSSProperties}>
             <div className="hw-visual"><div className="hw-chip"><span className="dot"></span></div></div>
-            <div className="hw-name">A100 · 80GB</div>
-            <div className="hw-spec">80GB HBM2e · 312 TFLOPS</div>
-            <div className="hw-bar">
-              <div className="hw-bar-lbl"><span>Network share</span><span>9%</span></div>
-              <div className="hw-bar-track"><div className="hw-bar-fill"></div></div>
+            <div className="font-display font-medium text-[1.25rem] mb-1.5 tracking-[-0.015em] [font-variation-settings:'opsz'_144]">A100 · 80GB</div>
+            <div className="font-mono text-[0.62rem] tracking-[0.05em] text-(--fg-2) mb-5">80GB HBM2e · 312 TFLOPS</div>
+            <div className="mt-auto">
+              <div className="flex justify-between font-mono text-[0.52rem] tracking-[0.2em] uppercase text-(--fg-3) mb-2"><span>Network share</span><span>9%</span></div>
+              <div className="h-1 bg-(--fg-5) relative overflow-hidden"><div className="hw-bar-fill"></div></div>
             </div>
           </div>
           <div className="hw-card reveal reveal-d3" style={{'--pct':'5%'} as React.CSSProperties}>
             <div className="hw-visual"><div className="hw-chip"><span className="dot"></span></div></div>
-            <div className="hw-name">Other</div>
-            <div className="hw-spec">4080 · 4070 · M-series · more</div>
-            <div className="hw-bar">
-              <div className="hw-bar-lbl"><span>Network share</span><span>5%</span></div>
-              <div className="hw-bar-track"><div className="hw-bar-fill"></div></div>
+            <div className="font-display font-medium text-[1.25rem] mb-1.5 tracking-[-0.015em] [font-variation-settings:'opsz'_144]">Other</div>
+            <div className="font-mono text-[0.62rem] tracking-[0.05em] text-(--fg-2) mb-5">4080 · 4070 · M-series · more</div>
+            <div className="mt-auto">
+              <div className="flex justify-between font-mono text-[0.52rem] tracking-[0.2em] uppercase text-(--fg-3) mb-2"><span>Network share</span><span>5%</span></div>
+              <div className="h-1 bg-(--fg-5) relative overflow-hidden"><div className="hw-bar-fill"></div></div>
             </div>
           </div>
         </div>
@@ -1057,52 +1057,52 @@ export default function Home() {
         </div>
         <div className="road grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="phase active reveal" style={{'--p':'1'} as React.CSSProperties}>
-            <span className="phase-tag">Live</span>
-            <div className="phase-label">Phase C · April 2026</div>
-            <div className="phase-name">Cryptographic Core</div>
+            <span className="phase-tag inline-flex items-center gap-1.5 font-mono text-[0.54rem] tracking-[0.25em] uppercase text-(--fg-3) mb-6">Live</span>
+            <div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3) mb-1.5">Phase C · April 2026</div>
+            <div className="font-display font-normal text-[1.55rem] tracking-[-0.02em] mb-[22px] [font-variation-settings:'opsz'_144]">Cryptographic Core</div>
             <ul className="phase-list">
               <li>Ed25519 identity + ProofOfInference</li>
               <li>Merkle reputation tree + gossip</li>
               <li>Free + signed-receipt settlement</li>
               <li>Local + IPFS + Walrus storage</li>
             </ul>
-            <div className="phase-progress"></div>
+            <div className="phase-progress absolute bottom-0 left-0 right-0 h-0.5 bg-(--fg-5)"></div>
           </div>
           <div className="phase reveal reveal-d1" style={{'--p':'0'} as React.CSSProperties}>
-            <span className="phase-tag">Queued</span>
-            <div className="phase-label">Phase D · H2 2026</div>
-            <div className="phase-name">Sui Settlement</div>
+            <span className="phase-tag inline-flex items-center gap-1.5 font-mono text-[0.54rem] tracking-[0.25em] uppercase text-(--fg-3) mb-6">Queued</span>
+            <div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3) mb-1.5">Phase D · H2 2026</div>
+            <div className="font-display font-normal text-[1.55rem] tracking-[-0.02em] mb-[22px] [font-variation-settings:'opsz'_144]">Sui Settlement</div>
             <ul className="phase-list">
               <li>Move escrow smart contract</li>
               <li>SuiSettlement adapter live</li>
               <li>On-chain proof verification</li>
               <li>Reputation anchoring on Sui</li>
             </ul>
-            <div className="phase-progress"></div>
+            <div className="phase-progress absolute bottom-0 left-0 right-0 h-0.5 bg-(--fg-5)"></div>
           </div>
           <div className="phase reveal reveal-d2" style={{'--p':'0'} as React.CSSProperties}>
-            <span className="phase-tag">Queued</span>
-            <div className="phase-label">Phase E · H1 2027</div>
-            <div className="phase-name">EVM Settlement</div>
+            <span className="phase-tag inline-flex items-center gap-1.5 font-mono text-[0.54rem] tracking-[0.25em] uppercase text-(--fg-3) mb-6">Queued</span>
+            <div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3) mb-1.5">Phase E · H1 2027</div>
+            <div className="font-display font-normal text-[1.55rem] tracking-[-0.02em] mb-[22px] [font-variation-settings:'opsz'_144]">EVM Settlement</div>
             <ul className="phase-list">
               <li>Solidity escrow contract · Base L2</li>
               <li>EvmSettlement adapter live</li>
               <li>Multi-chain settlement matrix</li>
               <li>TOML-selectable chains</li>
             </ul>
-            <div className="phase-progress"></div>
+            <div className="phase-progress absolute bottom-0 left-0 right-0 h-0.5 bg-(--fg-5)"></div>
           </div>
           <div className="phase reveal reveal-d3" style={{'--p':'0'} as React.CSSProperties}>
-            <span className="phase-tag">Queued</span>
-            <div className="phase-label">Phase F · H2 2027</div>
-            <div className="phase-name">On-Chain Channels</div>
+            <span className="phase-tag inline-flex items-center gap-1.5 font-mono text-[0.54rem] tracking-[0.25em] uppercase text-(--fg-3) mb-6">Queued</span>
+            <div className="font-mono text-[0.56rem] tracking-[0.25em] text-(--fg-3) mb-1.5">Phase F · H2 2027</div>
+            <div className="font-display font-normal text-[1.55rem] tracking-[-0.02em] mb-[22px] [font-variation-settings:'opsz'_144]">On-Chain Channels</div>
             <ul className="phase-list">
               <li>Payment channels — on-chain close</li>
               <li>50× gas amortisation at 100 req/session</li>
               <li>Full gossip protocol live</li>
               <li>Governance parameterisation</li>
             </ul>
-            <div className="phase-progress"></div>
+            <div className="phase-progress absolute bottom-0 left-0 right-0 h-0.5 bg-(--fg-5)"></div>
           </div>
         </div>
       </section>
