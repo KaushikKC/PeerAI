@@ -36,22 +36,22 @@ function WaitlistModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg>
+        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 flex cursor-pointer border-none bg-none p-1 text-(--fg-3) transition-colors duration-200 hover:text-(--fg)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M6 18l12-12"/></svg>
         </button>
-        <div className="modal-label">Join the waitlist</div>
+        <div className="mb-3.5 font-mono text-[0.58rem] uppercase tracking-[0.28em] text-(--fg-3)">Join the waitlist</div>
         {status === 'success' ? (
-          <div className="modal-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 12l5 5 9-9"/><circle cx="12" cy="12" r="10"/></svg>
-            <h3>You&apos;re on the list.</h3>
-            <p>We&apos;ll reach out when early access opens. Phase C is live — Ed25519 identity and signed-receipt settlement work today.</p>
+          <div className="flex flex-col items-start gap-3">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white opacity-90"><path d="M5 12l5 5 9-9"/><circle cx="12" cy="12" r="10"/></svg>
+            <h3 className="m-0 font-display text-[1.55rem] font-medium leading-[1.2] text-white">You&apos;re on the list.</h3>
+            <p className="m-0 text-[0.88rem] leading-[1.6] text-(--fg-2)">We&apos;ll reach out when early access opens. Phase C is live — Ed25519 identity and signed-receipt settlement work today.</p>
           </div>
         ) : (
           <>
-            <h3>Early access to Pinaivu AI</h3>
-            <p>Be among the first to run a node or use the network. No token, no chain required.</p>
-            <form onSubmit={submit} className="modal-form">
-              <div className="modal-input-wrap">
+            <h3 className="mb-2.5 mt-0 font-display text-[1.55rem] font-medium leading-[1.2] text-white">Early access to Pinaivu AI</h3>
+            <p className="mb-6 mt-0 text-[0.88rem] leading-[1.6] text-(--fg-2)">Be among the first to run a node or use the network. No token, no chain required.</p>
+            <form onSubmit={submit} className="flex flex-col gap-2.5">
+              <div className="flex overflow-hidden border border-(--line-h)">
                 <input
                   type="email"
                   placeholder="your@email.com"
@@ -61,13 +61,13 @@ function WaitlistModal({ onClose }: { onClose: () => void }) {
                   autoFocus
                   className="modal-input"
                 />
-                <button type="submit" className="modal-submit" disabled={status === 'loading'}>
+                <button type="submit" disabled={status === 'loading'} className="flex cursor-pointer items-center gap-1 border-none bg-white px-5 py-3 font-mono text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-black whitespace-nowrap transition-opacity duration-200 hover:opacity-85 disabled:cursor-default disabled:opacity-50">
                   {status === 'loading' ? <span className="modal-spinner"></span> : <><span>Request Access</span><span className="arrow"> ↗</span></>}
                 </button>
               </div>
-              {status === 'error' && <div className="modal-error">{msg}</div>}
+              {status === 'error' && <div className="border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.06)] px-3 py-2 font-mono text-[0.72rem] text-[#f87171]">{msg}</div>}
             </form>
-            <div className="modal-fine">No spam. Unsubscribe any time.</div>
+            <div className="mt-2.5 font-mono text-[0.6rem] tracking-[0.08em] text-(--fg-4)">No spam. Unsubscribe any time.</div>
           </>
         )}
       </div>
@@ -412,7 +412,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="page">
+    <div className="relative z-[1]">
       {showWaitlist && <WaitlistModal onClose={() => setShowWaitlist(false)} />}
       {/* Scroll Progress */}
       <div className="prog"><div className="prog-bar" id="progBar"></div></div>
@@ -539,8 +539,8 @@ export default function Home() {
       </section>
 
       {/* MANIFESTO */}
-      <section className="manifesto" id="manifesto">
-        <div className="m-wrap">
+      <section className="relative max-w-(--content-max) mx-auto p-0 max-[720px]:py-[60px] max-[720px]:px-(--content-pad)" id="manifesto">
+        <div className="relative px-(--content-pad)">
           <div className="m-label"><b>§ 001</b> Thesis <span style={{color:'var(--fg-3)'}}>· Drafted for the open network · v2.0</span></div>
           <div className="m-grid">
 
@@ -595,14 +595,14 @@ export default function Home() {
 
       {/* PROBLEMS */}
       <section id="problem">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>002</b> · The Failure Mode</div>
             <h2 className="sec-title reveal">Cloud AI bakes in <em>three consequences</em><br/>that aren&apos;t technical requirements.</h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">For every turn (P, C, R), today&apos;s provider observes all three, sets price ρ unilaterally, and revokes access at will. None of this is forced by the maths &mdash; only by the architecture.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">For every turn (P, C, R), today&apos;s provider observes all three, sets price ρ unilaterally, and revokes access at will. None of this is forced by the maths &mdash; only by the architecture.</p>
         </div>
-        <div className="grid problems">
+        <div className="problems grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="prob reveal">
             <div>
               <div className="prob-num"><span>01 — Context exposure</span><span className="tag">G1</span></div>
@@ -649,14 +649,14 @@ export default function Home() {
 
       {/* FEATURES */}
       <section id="features">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>003</b> · Six Layers</div>
             <h2 className="sec-title reveal">Every layer is <em>independently replaceable.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">Layers interact only through trait interfaces. Layer 0 (Crypto) has no external deps. Every layer above it may use external infra, but none is required.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Layers interact only through trait interfaces. Layer 0 (Crypto) has no external deps. Every layer above it may use external infra, but none is required.</p>
         </div>
-        <div className="grid features">
+        <div className="features grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="feat reveal">
             <div>
               <div className="feat-hd"><div className="feat-idx">L · 06 · Application</div>
@@ -721,13 +721,13 @@ export default function Home() {
       </section>
 
       {/* FLOW */}
-      <section className="flow" id="flow">
-        <div className="sec-head">
+      <section className="flow py-[72px] px-(--content-pad) max-w-(--content-max) mx-auto" id="flow">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>004</b> · Request Flow</div>
             <h2 className="sec-title reveal">From prompt to proof, <em>in under a second.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">Four stages. Each one cryptographically verifiable — from the sealed-bid auction through Ed25519-signed proof delivery.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Four stages. Each one cryptographically verifiable — from the sealed-bid auction through Ed25519-signed proof delivery.</p>
         </div>
         <div className="flow-diagram">
           <div className="flow-stage" id="flowStage">
@@ -768,18 +768,18 @@ export default function Home() {
               <p>Node signs ProofOfInference π binding (model, tokens, Δ, H_in, H_out) with Ed25519. π is appended to the node&apos;s Merkle tree. Settlement adapter executes and ships π to the client.</p>
             </div>
           </div>
-          <div className="flow-readout">
-            <div className="flow-readout-item">
-              <div className="flow-readout-val"><span data-count="845">0</span>ms</div>
-              <div className="flow-readout-lbl">Total · end to end</div>
+          <div className="mt-12 grid grid-cols-3 border-t border-(--line) pt-8">
+            <div className="px-6 border-r border-(--line-2) last:border-r-0">
+              <div className="mb-1 font-mono text-[1.2rem] font-medium"><span data-count="845">0</span>ms</div>
+              <div className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-(--fg-3)">Total · end to end</div>
             </div>
-            <div className="flow-readout-item">
-              <div className="flow-readout-val">42<span style={{color:'var(--fg-3)'}}>tok/s</span></div>
-              <div className="flow-readout-lbl">Throughput · 70B model</div>
+            <div className="px-6 border-r border-(--line-2) last:border-r-0">
+              <div className="mb-1 font-mono text-[1.2rem] font-medium">42<span style={{color:'var(--fg-3)'}}>tok/s</span></div>
+              <div className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-(--fg-3)">Throughput · 70B model</div>
             </div>
-            <div className="flow-readout-item">
-              <div className="flow-readout-val">0.0003<span style={{color:'var(--fg-3)'}}> PEER</span></div>
-              <div className="flow-readout-lbl">Cost · 256 tokens</div>
+            <div className="px-6 border-r border-(--line-2) last:border-r-0">
+              <div className="mb-1 font-mono text-[1.2rem] font-medium">0.0003<span style={{color:'var(--fg-3)'}}> PEER</span></div>
+              <div className="font-mono text-[0.55rem] tracking-[0.2em] uppercase text-(--fg-3)">Cost · 256 tokens</div>
             </div>
           </div>
         </div>
@@ -787,95 +787,95 @@ export default function Home() {
 
       {/* MODELS */}
       <section id="models">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>005</b> · Model Catalog</div>
             <h2 className="sec-title reveal">Run the models you want. <em>Not the ones they allow.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">Every open-weight checkpoint that fits in VRAM. Pre-cached for the popular ones, on-demand for the rest.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Every open-weight checkpoint that fits in VRAM. Pre-cached for the popular ones, on-demand for the rest.</p>
         </div>
-        <div className="models-shell">
-          <div className="models-head">
-            <div className="tabs" id="modelTabs">
-              <button className="tab active" data-tab="llm">Language</button>
-              <button className="tab" data-tab="vision">Vision</button>
-              <button className="tab" data-tab="audio">Audio</button>
+        <div className="px-(--content-pad) max-w-(--content-max) mx-auto">
+          <div className="flex items-end justify-between mb-7 gap-6 flex-wrap">
+            <div className="flex rounded-full border border-(--line-2) bg-(--bg-1) p-1" id="modelTabs">
+              <button className="tab active font-mono text-[0.62rem] tracking-[0.18em] uppercase py-[9px] px-[18px] rounded-full text-(--fg-3) transition-all duration-300 font-medium" data-tab="llm">Language</button>
+              <button className="tab font-mono text-[0.62rem] tracking-[0.18em] uppercase py-[9px] px-[18px] rounded-full text-(--fg-3) transition-all duration-300 font-medium" data-tab="vision">Vision</button>
+              <button className="tab font-mono text-[0.62rem] tracking-[0.18em] uppercase py-[9px] px-[18px] rounded-full text-(--fg-3) transition-all duration-300 font-medium" data-tab="audio">Audio</button>
             </div>
             <div style={{fontFamily:'var(--mono)',fontSize:'.58rem',letterSpacing:'.22em',textTransform:'uppercase',color:'var(--fg-3)'}}>
               <span style={{color:'#fff'}}>84</span> models live · <span style={{color:'#fff'}}>2,847</span> variants
             </div>
           </div>
-          <div className="models-box">
+          <div className="models-box grid grid-cols-[1.1fr_1fr] min-h-[460px] border border-(--line) bg-(--bg-1) max-lg:grid-cols-1">
 
             <div className="model-panel active" id="panel-llm">
-              <div className="models-pane">
+              <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
-                  <div className="models-meta"><span className="pill">LLM</span><span className="pill">Text</span><span className="pill">FP16 · INT8 · INT4</span></div>
+                  <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">LLM</span><span className="pill">Text</span><span className="pill">FP16 · INT8 · INT4</span></div>
                   <h3>Llama 3.1 · 405B</h3>
                   <div className="author">Meta · Open weights · Released Jul 2024</div>
                   <p>The largest open LLM running on the network. Sharded across 16 consumer GPUs via tensor parallel. Competitive with GPT-4 on most benchmarks at a fraction of the cost.</p>
                 </div>
-                <div className="models-spec">
-                  <div className="spec"><div className="spec-lbl">Parameters</div><div className="spec-val">405<span className="dim">B</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Context</div><div className="spec-val">128<span className="dim">K tokens</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Throughput</div><div className="spec-val">42<span className="dim"> tok/s</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Cost / 1K</div><div className="spec-val">$0.003</div></div>
+                <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Parameters</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">405<span className="dim">B</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Context</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">128<span className="dim">K tokens</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Throughput</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">42<span className="dim"> tok/s</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / 1K</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.003</div></div>
                 </div>
               </div>
-              <div className="terminal">
-                <div className="term-bar">
-                  <div className="td"></div><div className="td"></div><div className="td"></div>
-                  <div className="term-title">peer-cli · llama-3.1-405b</div>
+              <div className="terminal bg-black font-mono text-[0.75rem] leading-[1.75] flex flex-col">
+                <div className="flex items-center gap-1.5 border-b border-(--line) px-[18px] py-3.5">
+                  <div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div>
+                  <div className="ml-auto font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3)">peer-cli · llama-3.1-405b</div>
                 </div>
-                <div className="term-body" data-term="llm"></div>
+                <div className="flex-1 overflow-y-auto p-[22px_20px]" data-term="llm"></div>
               </div>
             </div>
 
             <div className="model-panel" id="panel-vision">
-              <div className="models-pane">
+              <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
-                  <div className="models-meta"><span className="pill">Vision</span><span className="pill">Diffusion</span><span className="pill">1024²</span></div>
+                  <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">Vision</span><span className="pill">Diffusion</span><span className="pill">1024²</span></div>
                   <h3>FLUX.1 · Pro</h3>
                   <div className="author">Black Forest Labs · Open weights · Aug 2024</div>
                   <p>State-of-the-art text-to-image at 1024² native resolution. Runs on a single consumer GPU. 4-step Turbo variant generates in under 1 second per image.</p>
                 </div>
-                <div className="models-spec">
-                  <div className="spec"><div className="spec-lbl">Resolution</div><div className="spec-val">1024<span className="dim">×1024</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Steps</div><div className="spec-val">4<span className="dim"> (turbo)</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Latency</div><div className="spec-val">2.1<span className="dim">s</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Cost / img</div><div className="spec-val">$0.004</div></div>
+                <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Resolution</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">1024<span className="dim">×1024</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Steps</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">4<span className="dim"> (turbo)</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Latency</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">2.1<span className="dim">s</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / img</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.004</div></div>
                 </div>
               </div>
-              <div className="terminal">
-                <div className="term-bar">
-                  <div className="td"></div><div className="td"></div><div className="td"></div>
-                  <div className="term-title">peer-cli · flux-1-pro</div>
+              <div className="terminal bg-black font-mono text-[0.75rem] leading-[1.75] flex flex-col">
+                <div className="flex items-center gap-1.5 border-b border-(--line) px-[18px] py-3.5">
+                  <div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div>
+                  <div className="ml-auto font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3)">peer-cli · flux-1-pro</div>
                 </div>
-                <div className="term-body" data-term="vision"></div>
+                <div className="flex-1 overflow-y-auto p-[22px_20px]" data-term="vision"></div>
               </div>
             </div>
 
             <div className="model-panel" id="panel-audio">
-              <div className="models-pane">
+              <div className="models-pane p-12 border-r border-(--line) flex flex-col justify-between relative overflow-hidden max-lg:border-r-0 max-lg:border-b max-lg:border-b-(--line)">
                 <div>
-                  <div className="models-meta"><span className="pill">Audio</span><span className="pill">STT</span><span className="pill">Streaming</span></div>
+                  <div className="models-meta font-mono text-[0.58rem] tracking-[0.25em] uppercase text-(--fg-3) flex gap-3 mb-4"><span className="pill">Audio</span><span className="pill">STT</span><span className="pill">Streaming</span></div>
                   <h3>Whisper · Large v3</h3>
                   <div className="author">OpenAI · Open weights · MIT license</div>
                   <p>99-language speech-to-text with automatic language detection. Runs 52× realtime on an RTX 3090. Native WebSocket streaming for voice applications.</p>
                 </div>
-                <div className="models-spec">
-                  <div className="spec"><div className="spec-lbl">Languages</div><div className="spec-val">99</div></div>
-                  <div className="spec"><div className="spec-lbl">Speed</div><div className="spec-val">52×<span className="dim"> realtime</span></div></div>
-                  <div className="spec"><div className="spec-lbl">TTFT</div><div className="spec-val">&lt;300<span className="dim">ms</span></div></div>
-                  <div className="spec"><div className="spec-lbl">Cost / min</div><div className="spec-val">$0.001</div></div>
+                <div className="models-spec grid grid-cols-2 gap-px bg-(--line) border border-(--line)">
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Languages</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">99</div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Speed</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">52×<span className="dim"> realtime</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">TTFT</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">&lt;300<span className="dim">ms</span></div></div>
+                  <div className="bg-(--bg-1) p-4 flex flex-col gap-1"><div className="font-mono text-[0.54rem] tracking-[0.22em] uppercase text-(--fg-3)">Cost / min</div><div className="font-mono text-[0.92rem] text-(--fg) font-medium">$0.001</div></div>
                 </div>
               </div>
-              <div className="terminal">
-                <div className="term-bar">
-                  <div className="td"></div><div className="td"></div><div className="td"></div>
-                  <div className="term-title">peer-cli · whisper-v3-large</div>
+              <div className="terminal bg-black font-mono text-[0.75rem] leading-[1.75] flex flex-col">
+                <div className="flex items-center gap-1.5 border-b border-(--line) px-[18px] py-3.5">
+                  <div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div><div className="size-2 rounded-full border border-(--fg-3)"></div>
+                  <div className="ml-auto font-mono text-[0.56rem] tracking-[0.25em] uppercase text-(--fg-3)">peer-cli · whisper-v3-large</div>
                 </div>
-                <div className="term-body" data-term="audio"></div>
+                <div className="flex-1 overflow-y-auto p-[22px_20px]" data-term="audio"></div>
               </div>
             </div>
 
@@ -885,14 +885,14 @@ export default function Home() {
 
       {/* COMPARE */}
       <section id="compare">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>006</b> · Comparison</div>
             <h2 className="sec-title reveal">Against the <em>incumbents.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">Every prior system either lacks G2 (no verifiable accountability) or sacrifices G3/G4 (hard-coded chain and storage). Pinaivu AI is the first to satisfy all five guarantees simultaneously.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Every prior system either lacks G2 (no verifiable accountability) or sacrifices G3/G4 (hard-coded chain and storage). Pinaivu AI is the first to satisfy all five guarantees simultaneously.</p>
         </div>
-        <div className="compare-shell">
+        <div className="px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="compare-box reveal">
             <div className="compare-row head">
               <div className="compare-cell">Property</div>
@@ -956,14 +956,14 @@ export default function Home() {
 
       {/* TECH */}
       <section id="tech">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>007</b> · Stack</div>
             <h2 className="sec-title reveal">Built on <em>proven primitives.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">No reinvention for its own sake. Every layer is a battle-tested open-source component, assembled specifically for GPU compute coordination.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">No reinvention for its own sake. Every layer is a battle-tested open-source component, assembled specifically for GPU compute coordination.</p>
         </div>
-        <div className="grid tech">
+        <div className="tech grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="tech-item reveal">
             <div className="tech-hd"><h4>libp2p Transport</h4><div className="tech-ord">T · 01</div></div>
             <p>TCP + QUIC dual-stack with Noise authenticated encryption and Yamux stream multiplexing. AutoNAT traversal means any home node can participate without port-forwarding.</p>
@@ -999,14 +999,14 @@ export default function Home() {
 
       {/* HARDWARE */}
       <section id="hardware">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>008</b> · Fleet</div>
             <h2 className="sec-title reveal">The GPUs <em>behind the mesh.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">A live breakdown of the hardware running inference right now. Consumer cards dominate the network — by design.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">A live breakdown of the hardware running inference right now. Consumer cards dominate the network — by design.</p>
         </div>
-        <div className="grid hw" id="hwGrid">
+        <div className="hw grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto" id="hwGrid">
           <div className="hw-card reveal" style={{'--pct':'68%'} as React.CSSProperties}>
             <div className="hw-visual"><div className="hw-chip"><span className="dot"></span></div></div>
             <div className="hw-name">RTX 4090</div>
@@ -1048,14 +1048,14 @@ export default function Home() {
 
       {/* ROADMAP */}
       <section id="roadmap">
-        <div className="sec-head">
+        <div className="grid grid-cols-2 gap-14 items-end px-(--content-pad) max-w-(--content-max) mx-auto mb-[60px] max-lg:grid-cols-1 max-lg:gap-4 max-[720px]:mb-7">
           <div>
             <div className="sec-label"><b>009</b> · Timeline</div>
             <h2 className="sec-title reveal">From testnet <em>to full mesh.</em></h2>
           </div>
-          <p className="sec-desc reveal reveal-d1">Four phases. Shipping cadence tied to node-count milestones, not marketing dates.</p>
+          <p className="reveal reveal-d1 text-[0.97rem] text-(--fg-2) leading-[1.72] max-w-[500px] justify-self-end pb-2.5 max-lg:justify-self-start">Four phases. Shipping cadence tied to node-count milestones, not marketing dates.</p>
         </div>
-        <div className="grid road">
+        <div className="road grid gap-0 px-(--content-pad) max-w-(--content-max) mx-auto">
           <div className="phase active reveal" style={{'--p':'1'} as React.CSSProperties}>
             <span className="phase-tag">Live</span>
             <div className="phase-label">Phase C · April 2026</div>
@@ -1108,14 +1108,14 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA */}
-      <div className="final" id="cta">
-        <div className="final-inner">
+      <div className="py-[120px] px-(--content-pad) max-w-(--content-max) mx-auto max-[720px]:py-[68px]" id="cta">
+        <div className="relative overflow-hidden border border-(--line) py-[108px] px-[68px] text-center max-[720px]:px-6 max-[720px]:py-[60px]">
           <div className="final-grid-bg"></div>
           <div className="final-radial"></div>
-          <div className="final-eyebrow">— 010 · Start Here</div>
-          <h2>Be first on the network.<br/><em>Join the waitlist.</em></h2>
-          <p>No credit card. No token. No permission. Phase C is live — Ed25519 identity, Merkle reputation and signed-receipt settlement work today, with zero blockchain required.</p>
-          <div className="final-ctas">
+          <div className="relative mb-7 font-mono text-[0.6rem] tracking-[0.35em] uppercase text-(--fg-3)">— 010 · Start Here</div>
+          <h2 className="relative mb-5 font-display font-normal text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] tracking-[-0.035em] [font-variation-settings:'opsz'_144] [&_em]:font-light [&_em]:italic [&_em]:text-(--fg-2)">Be first on the network.<br/><em>Join the waitlist.</em></h2>
+          <p className="relative mx-auto mb-9 max-w-[500px] text-base leading-[1.6] text-(--fg-2)">No credit card. No token. No permission. Phase C is live — Ed25519 identity, Merkle reputation and signed-receipt settlement work today, with zero blockchain required.</p>
+          <div className="relative flex flex-wrap justify-center gap-2.5">
             <button className="btn btn-primary" onClick={() => setShowWaitlist(true)}><span>Join Waitlist</span><span className="arrow">↗</span></button>
             <a className="btn btn-ghost" href="/PinaivuAI_Whitepaper.pdf" target="_blank" rel="noopener noreferrer"><span>Read Whitepaper</span></a>
           </div>
@@ -1123,21 +1123,21 @@ export default function Home() {
       </div>
 
       {/* FOOTER */}
-      <footer>
-        <div className="brand">
+      <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-(--line) px-(--content-pad) py-12 max-w-(--content-max) mx-auto">
+        <div className="flex items-center gap-2.5 font-mono text-[0.72rem] font-medium tracking-[0.08em] uppercase">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/>
             <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
           </svg>
           Pinaivu AI
         </div>
-        <div className="meta">The Inference Network · Est. 2026 · Licensed MIT</div>
-        <ul className="footer-links">
-          <li><a href="#">Docs</a></li>
-          <li><a href="#">GitHub</a></li>
-          <li><a href="#">Discord</a></li>
-          <li><a href="#">Twitter</a></li>
-          <li><a href="/PinaivuAI_Whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>
+        <div className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3)">The Inference Network · Est. 2026 · Licensed MIT</div>
+        <ul className="flex list-none gap-5">
+          <li><a href="#" className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3) transition-colors duration-300 hover:text-white">Docs</a></li>
+          <li><a href="#" className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3) transition-colors duration-300 hover:text-white">GitHub</a></li>
+          <li><a href="#" className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3) transition-colors duration-300 hover:text-white">Discord</a></li>
+          <li><a href="#" className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3) transition-colors duration-300 hover:text-white">Twitter</a></li>
+          <li><a href="/PinaivuAI_Whitepaper.pdf" target="_blank" rel="noopener noreferrer" className="font-mono text-[0.58rem] tracking-[0.22em] uppercase text-(--fg-3) transition-colors duration-300 hover:text-white">Whitepaper</a></li>
         </ul>
       </footer>
     </div>
