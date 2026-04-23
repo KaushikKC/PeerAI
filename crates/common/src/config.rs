@@ -187,8 +187,7 @@ impl Default for NetworkSection {
         Self {
             listen_port:    4001,
             bootstrap_nodes: vec![
-                "/dns4/bootstrap1.pinaivu.ai/tcp/4001/p2p/QmPlaceholder1".into(),
-                "/dns4/bootstrap2.pinaivu.ai/tcp/4001/p2p/QmPlaceholder2".into(),
+                "/ip4/13.48.204.156/tcp/4001/p2p/12D3KooWBoxCVGU2BpCYLqDN27AtyAtXJyY6MeCRssSARYL4NnU9".into(),
             ],
             max_peers:     50,
             nat_traversal: true,
