@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # triggers on v0.1.0, v0.2.0, etc.
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: pinaivu-linux-x86_64
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: pinaivu-macos-intel
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: pinaivu-macos-apple-silicon
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: pinaivu-windows-x86_64.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux cross-compile deps
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cp target/${{ matrix.target }}/release/pinaivu ${{ matrix.artifact }}
+          chmod +x ${{ matrix.artifact }}
+
+      - name: Rename binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: copy target\${{ matrix.target }}\release\pinaivu.exe ${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **Mac (Apple Silicon — M1/M2/M3):**
+            ```bash
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/pinaivu-macos-apple-silicon -o pinaivu
+            chmod +x pinaivu && sudo mv pinaivu /usr/local/bin/
+            ```
+
+            **Mac (Intel):**
+            ```bash
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/pinaivu-macos-intel -o pinaivu
+            chmod +x pinaivu && sudo mv pinaivu /usr/local/bin/
+            ```
+
+            **Linux:**
+            ```bash
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/pinaivu-linux-x86_64 -o pinaivu
+            chmod +x pinaivu && sudo mv pinaivu /usr/local/bin/
+            ```
+
+            ## Quick start
+            ```bash
+            pinaivu init    # creates config at ~/.pinaivu/config.toml
+            pinaivu start   # joins the network
+            ```

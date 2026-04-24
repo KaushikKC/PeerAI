@@ -89,7 +89,7 @@ pub struct NodeSection {
 impl Default for NodeSection {
     fn default() -> Self {
         Self {
-            mode:      OperationMode::Standalone,
+            mode:      OperationMode::Network,
             node_id:   String::new(),
             data_dir:  "~/.pinaivu/data".into(),
             log_level: "info".into(),
