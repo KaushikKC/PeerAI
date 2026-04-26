@@ -59,19 +59,19 @@ export function useStream(
 
       try {
         // --- Marketplace discovery: find best node to execute this request ---
-        let winnerApiUrl: string | undefined;
+        let winnerPeerId: string | undefined;
         let executingNode: MarketplaceBid | null = null;
         try {
           const bids = await fetchMarketplaceBids({
             model:                modelId,
             max_tokens:           2048,
-            accepted_settlements: ['receipt'],
+            accepted_settlements: ['free', 'receipt'],
             bid_timeout_ms:       2000,
           });
           const winner = pickBestBid(bids);
           if (winner) {
             executingNode = winner;
-            winnerApiUrl  = winner.api_url ?? undefined;
+            winnerPeerId  = winner.node_peer_id;
             // Stamp nodeId on the placeholder message immediately so the UI
             // shows which node is running before the first token arrives.
             updateLastAssistantMessage(session.id, '', { nodeId: winner.node_peer_id });
@@ -86,9 +86,12 @@ export function useStream(
           prompt:     userText,
           session_id: session.id,
           max_tokens: 2048,
+          // Pass peer_id when a remote node won — local node routes via P2P gossipsub.
+          // No port forwarding or api_url needed on the remote side.
+          peer_id:    winnerPeerId,
         };
 
-        for await (const chunk of streamInfer(req, winnerApiUrl)) {
+        for await (const chunk of streamInfer(req)) {
           if (typeof chunk === 'string') {
             accumulated += chunk;
             setState(prev => ({ ...prev, streamingText: accumulated }));

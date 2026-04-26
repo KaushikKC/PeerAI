@@ -19,7 +19,10 @@ use tracing::{debug, error, info, warn};
 use common::{
     config::{NodeConfig, OperationMode, ReputationStoreKind},
     payment::{FreePayment, LocalLedger, PaymentBackend},
-    types::{GpuType, InferenceBid, InferenceRequest, NodeCapabilities, ReputationScore},
+    types::{
+        ContextWindow, GpuType, InferenceBid, InferenceRequest, Message, NodeCapabilities,
+        P2PInferenceChunk, ReputationScore, Role,
+    },
 };
 
 // ---------------------------------------------------------------------------
@@ -33,6 +36,11 @@ pub type PeerRegistry = Arc<tokio::sync::Mutex<HashMap<String, NodeCapabilities>
 /// sender before broadcasting; the P2P event loop forwards matching bids to it.
 pub type BidCollectors =
     Arc<tokio::sync::Mutex<HashMap<uuid::Uuid, tokio::sync::mpsc::Sender<InferenceBid>>>>;
+
+/// Per-request P2P inference chunk channels.  The HTTP infer handler inserts a
+/// sender keyed by response_id; the event loop forwards matching chunks to it.
+pub type ResponseCollectors =
+    Arc<tokio::sync::Mutex<HashMap<String, tokio::sync::mpsc::Sender<P2PInferenceChunk>>>>;
 
 use crate::identity::NodeIdentity;
 use reputation::{GossipReputationStore, LocalReputationStore, ReputationStore};
@@ -98,7 +106,9 @@ pub struct DeAIDaemon {
     /// Known peers — updated whenever a `NodeAnnounceReceived` event arrives.
     peer_registry:  PeerRegistry,
     /// Bid collection channels registered by the marketplace HTTP handler.
-    bid_collectors: BidCollectors,
+    bid_collectors:      BidCollectors,
+    /// P2P inference chunk channels registered by the /v1/infer peer_id handler.
+    response_collectors: ResponseCollectors,
     /// Our own capabilities — re-broadcast on every new peer connection.
     own_caps:       Option<NodeCapabilities>,
 }
@@ -433,8 +443,9 @@ impl DeAIDaemon {
             }
         };
 
-        let peer_registry:  PeerRegistry  = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
-        let bid_collectors: BidCollectors = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
+        let peer_registry:       PeerRegistry       = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
+        let bid_collectors:      BidCollectors      = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
+        let response_collectors: ResponseCollectors = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
 
         Ok(Self {
             config,
@@ -451,6 +462,7 @@ impl DeAIDaemon {
             rep_root_rx,
             peer_registry,
             bid_collectors,
+            response_collectors,
             own_caps,
         })
     }
@@ -485,6 +497,9 @@ impl DeAIDaemon {
 
     /// Cloned `BidCollectors` — shared with the HTTP API server.
     pub fn bid_collectors(&self) -> BidCollectors { Arc::clone(&self.bid_collectors) }
+
+    /// Cloned `ResponseCollectors` — shared with the HTTP API server.
+    pub fn response_collectors(&self) -> ResponseCollectors { Arc::clone(&self.response_collectors) }
 
     /// Returns a cloned `P2PService` handle for use in the HTTP API server.
     pub fn p2p_service_cloned(&self) -> Option<P2PService> {
@@ -523,16 +538,19 @@ impl DeAIDaemon {
                 });
             }
 
-            let bid_engine     = Arc::clone(&self.bid_engine);
-            let scheduler      = Arc::clone(&self.scheduler);
-            let payment        = Arc::clone(&self.payment);
-            let peer_registry  = Arc::clone(&self.peer_registry);
-            let bid_collectors = Arc::clone(&self.bid_collectors);
+            let bid_engine          = Arc::clone(&self.bid_engine);
+            let scheduler           = Arc::clone(&self.scheduler);
+            let payment             = Arc::clone(&self.payment);
+            let peer_registry       = Arc::clone(&self.peer_registry);
+            let bid_collectors      = Arc::clone(&self.bid_collectors);
+            let response_collectors = Arc::clone(&self.response_collectors);
+            let engine              = Arc::clone(&self.engine);
 
             let own_caps = self.own_caps.take().expect("own_caps set in network mode");
             tokio::select! {
                 _ = event_loop(svc, &mut events, bid_engine, scheduler, payment,
-                               peer_registry, bid_collectors, own_caps) => {}
+                               peer_registry, bid_collectors, response_collectors,
+                               engine, own_caps) => {}
                 _ = tokio::signal::ctrl_c() => {
                     info!("shutdown signal received");
                 }
@@ -560,18 +578,36 @@ impl DeAIDaemon {
 /// - `NodeAnnounceReceived`     → insert into peer registry
 /// - `PeerConnected/Disconnected` → log
 async fn event_loop(
-    svc:            P2PService,
-    events:         &mut tokio::sync::mpsc::Receiver<P2PEvent>,
-    bid_engine:     Arc<BidDecisionEngine>,
-    scheduler:      Arc<NodeScheduler>,
-    payment:        Arc<dyn PaymentBackend>,
-    peer_registry:  PeerRegistry,
-    bid_collectors: BidCollectors,
-    own_caps:       NodeCapabilities,
+    svc:                 P2PService,
+    events:              &mut tokio::sync::mpsc::Receiver<P2PEvent>,
+    bid_engine:          Arc<BidDecisionEngine>,
+    scheduler:           Arc<NodeScheduler>,
+    payment:             Arc<dyn PaymentBackend>,
+    peer_registry:       PeerRegistry,
+    bid_collectors:      BidCollectors,
+    response_collectors: ResponseCollectors,
+    engine:              Arc<dyn InferenceEngine>,
+    own_caps:            NodeCapabilities,
 ) {
     while let Some(event) = events.recv().await {
         match event {
             P2PEvent::InferenceRequestReceived(req) => {
+                // Targeted P2P execution: only this node should run it.
+                if let Some(target) = &req.target_peer_id {
+                    let own = svc.local_peer_id().await.map(|p| p.to_string()).unwrap_or_default();
+                    if *target == own {
+                        tokio::spawn(execute_p2p_inference(
+                            req,
+                            svc.clone(),
+                            Arc::clone(&engine),
+                        ));
+                        continue;
+                    }
+                    // Not targeted at us — ignore (another node will handle it).
+                    continue;
+                }
+
+                // No target → normal bid flow.
                 handle_inference_request(
                     req,
                     svc.clone(),
@@ -588,7 +624,6 @@ async fn event_loop(
                     price      = bid.accepted_settlements.first().map(|o| o.price_per_1k).unwrap_or(0),
                     "bid received"
                 );
-                // Forward to the marketplace HTTP handler waiting on this request_id.
                 let tx = bid_collectors.lock().await
                     .get(&bid.request_id)
                     .cloned();
@@ -615,17 +650,115 @@ async fn event_loop(
             }
 
             P2PEvent::ReputationRootReceived { from, root } => {
-                // Phase G: a peer has broadcast their latest Merkle root.
-                // Future phases will verify and integrate it into our peer
-                // reputation cache.  For now, log it.
                 info!(
-                    peer    = %from,
-                    root    = %hex::encode(root),
+                    peer = %from,
+                    root = %hex::encode(root),
                     "reputation: received Merkle root from peer"
                 );
             }
+
+            P2PEvent::InferenceChunkReceived { response_id, chunk } => {
+                let tx = response_collectors.lock().await
+                    .get(&response_id)
+                    .cloned();
+                if let Some(tx) = tx {
+                    let _ = tx.try_send(chunk);
+                }
+            }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// P2P direct inference executor
+// ---------------------------------------------------------------------------
+
+/// Runs inference for a targeted P2P request and streams chunks back via gossipsub.
+async fn execute_p2p_inference(
+    req:    InferenceRequest,
+    svc:    P2PService,
+    engine: Arc<dyn InferenceEngine>,
+) {
+    use futures::StreamExt as _;
+    use inference::InferenceParams;
+
+    let response_topic = match &req.response_topic {
+        Some(t) => t.clone(),
+        None    => {
+            warn!(request_id = %req.request_id, "targeted request missing response_topic");
+            return;
+        }
+    };
+    let prompt = req.prompt_plain.as_deref().unwrap_or("").to_string();
+
+    info!(
+        request_id = %req.request_id,
+        model      = %req.model_preference,
+        "executing P2P inference request"
+    );
+
+    let context = ContextWindow {
+        recent_messages: vec![Message {
+            role:        Role::User,
+            content:     prompt.clone(),
+            timestamp:   0,
+            node_id:     None,
+            token_count: 0,
+        }],
+        ..Default::default()
+    };
+
+    let params = InferenceParams {
+        request_id:  req.request_id,
+        max_tokens:  req.max_tokens,
+        temperature: req.temperature,
+    };
+
+    let send_error = |svc: P2PService, response_topic: String, err: String| async move {
+        let chunk = P2PInferenceChunk {
+            request_id: req.request_id,
+            token:      String::new(),
+            is_final:   true,
+            error:      Some(err),
+        };
+        let _ = svc.publish_infer_chunk(&response_topic, &chunk).await;
+    };
+
+    let stream = match engine.run_inference(
+        &req.model_preference, &context, &prompt, params,
+    ).await {
+        Ok(s)  => s,
+        Err(e) => {
+            error!(%e, "P2P inference engine error");
+            send_error(svc, response_topic, e.to_string()).await;
+            return;
+        }
+    };
+
+    futures::pin_mut!(stream);
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(chunk) => {
+                let p2p_chunk = P2PInferenceChunk {
+                    request_id: req.request_id,
+                    token:      chunk.token.clone(),
+                    is_final:   chunk.is_final,
+                    error:      None,
+                };
+                if let Err(e) = svc.publish_infer_chunk(&response_topic, &p2p_chunk).await {
+                    warn!(%e, "failed to publish inference chunk");
+                }
+                if chunk.is_final { break; }
+            }
+            Err(e) => {
+                error!(%e, "inference stream error");
+                send_error(svc, response_topic, e.to_string()).await;
+                return;
+            }
+        }
+    }
+
+    info!(request_id = %req.request_id, "P2P inference complete");
 }
 
 // ---------------------------------------------------------------------------

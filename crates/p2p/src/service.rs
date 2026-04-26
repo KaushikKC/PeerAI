@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use common::{
     config::NodeConfig,
-    types::{InferenceBid, InferenceRequest, NodeCapabilities},
+    types::{InferenceBid, InferenceRequest, NodeCapabilities, P2PInferenceChunk},
 };
 
 use crate::{
@@ -38,10 +38,14 @@ pub enum P2PEvent {
     NodeAnnounceReceived(NodeCapabilities),
     PeerConnected(PeerId),
     PeerDisconnected(PeerId),
-    /// A remote peer published a reputation Merkle root on the reputation topic.
     ReputationRootReceived {
         from: String,
         root: [u8; 32],
+    },
+    /// A token chunk published on a per-request response topic.
+    InferenceChunkReceived {
+        response_id: String,
+        chunk:       P2PInferenceChunk,
     },
 }
 
@@ -81,6 +85,18 @@ enum SwarmCommand {
     },
     ConnectedPeers {
         resp: oneshot::Sender<Vec<PeerId>>,
+    },
+    SubscribeResponseTopic {
+        response_id: String,
+        resp:        oneshot::Sender<()>,
+    },
+    UnsubscribeResponseTopic {
+        response_id: String,
+    },
+    PublishInferChunk {
+        response_id: String,
+        chunk:       P2PInferenceChunk,
+        resp:        oneshot::Sender<anyhow::Result<()>>,
     },
 }
 
@@ -194,6 +210,47 @@ impl P2PService {
             .await
             .context("swarm task gone")?;
         Ok(resp_rx.await.context("swarm task dropped response")?)
+    }
+
+    /// Subscribe to a per-request response topic so incoming chunks are delivered.
+    pub async fn subscribe_response_topic(&self, response_id: &str) -> anyhow::Result<()> {
+        let (resp_tx, resp_rx) = oneshot::channel();
+        self.cmd_tx
+            .send(SwarmCommand::SubscribeResponseTopic {
+                response_id: response_id.to_owned(),
+                resp:        resp_tx,
+            })
+            .await
+            .context("swarm task gone")?;
+        resp_rx.await.context("swarm task dropped response")?;
+        Ok(())
+    }
+
+    /// Unsubscribe from a response topic after the inference is complete.
+    pub async fn unsubscribe_response_topic(&self, response_id: &str) {
+        let _ = self.cmd_tx
+            .send(SwarmCommand::UnsubscribeResponseTopic {
+                response_id: response_id.to_owned(),
+            })
+            .await;
+    }
+
+    /// Publish a single inference chunk on the per-request response topic.
+    pub async fn publish_infer_chunk(
+        &self,
+        response_id: &str,
+        chunk:       &P2PInferenceChunk,
+    ) -> anyhow::Result<()> {
+        let (resp_tx, resp_rx) = oneshot::channel();
+        self.cmd_tx
+            .send(SwarmCommand::PublishInferChunk {
+                response_id: response_id.to_owned(),
+                chunk:       chunk.clone(),
+                resp:        resp_tx,
+            })
+            .await
+            .context("swarm task gone")?;
+        resp_rx.await.context("swarm task dropped response")?
     }
 }
 
@@ -400,6 +457,8 @@ async fn swarm_task(
 
     // Track topic hash → model_id for model-specific inference topics
     let mut model_topics: HashMap<libp2p::gossipsub::TopicHash, String> = HashMap::new();
+    // Track topic hash → response_id for per-request response topics
+    let mut response_topics: HashMap<libp2p::gossipsub::TopicHash, String> = HashMap::new();
     let mut announce_seq: u64 = 0;
 
     // Announce our capabilities periodically so peers that join later learn about us.
@@ -435,13 +494,13 @@ async fn swarm_task(
             // ---- swarm events ----
             event = swarm.next() => {
                 let Some(event) = event else { break };
-                handle_swarm_event(event, &event_tx, &mut model_topics, &mut swarm, &own_caps, &mut announce_seq, &mut delayed_announce).await;
+                handle_swarm_event(event, &event_tx, &mut model_topics, &mut response_topics, &mut swarm, &own_caps, &mut announce_seq, &mut delayed_announce).await;
             }
 
             // ---- commands from the rest of the node ----
             cmd = cmd_rx.recv() => {
                 let Some(cmd) = cmd else { break };
-                handle_command(cmd, &mut swarm, &mut model_topics);
+                handle_command(cmd, &mut swarm, &mut model_topics, &mut response_topics);
             }
         }
     }
@@ -456,6 +515,7 @@ fn handle_command(
     cmd: SwarmCommand,
     swarm: &mut Swarm<PinaivuBehaviour>,
     model_topics: &mut HashMap<libp2p::gossipsub::TopicHash, String>,
+    response_topics: &mut HashMap<libp2p::gossipsub::TopicHash, String>,
 ) {
     match cmd {
         SwarmCommand::BroadcastReputationRoot { root, resp } => {
@@ -545,6 +605,31 @@ fn handle_command(
             let _ = resp.send(*swarm.local_peer_id());
         }
 
+        SwarmCommand::SubscribeResponseTopic { response_id, resp } => {
+            let topic = topics::infer_response_topic(&response_id);
+            let hash  = topic.hash();
+            let _ = swarm.behaviour_mut().gossipsub.subscribe(&topic);
+            response_topics.insert(hash, response_id);
+            let _ = resp.send(());
+        }
+
+        SwarmCommand::UnsubscribeResponseTopic { response_id } => {
+            let topic = topics::infer_response_topic(&response_id);
+            let hash  = topic.hash();
+            let _ = swarm.behaviour_mut().gossipsub.unsubscribe(&topic);
+            response_topics.remove(&hash);
+        }
+
+        SwarmCommand::PublishInferChunk { response_id, chunk, resp } => {
+            let result = (|| -> anyhow::Result<()> {
+                let topic   = topics::infer_response_topic(&response_id);
+                let payload = serde_json::to_vec(&chunk)?;
+                swarm.behaviour_mut().gossipsub.publish(topic, payload)?;
+                Ok(())
+            })();
+            let _ = resp.send(result);
+        }
+
         SwarmCommand::ConnectedPeers { resp } => {
             let peers: Vec<PeerId> = swarm.connected_peers().copied().collect();
             let _ = resp.send(peers);
@@ -560,6 +645,7 @@ async fn handle_swarm_event(
     event:                SwarmEvent<crate::behaviour::PinaivuBehaviourEvent>,
     event_tx:             &mpsc::Sender<P2PEvent>,
     model_topics:         &HashMap<libp2p::gossipsub::TopicHash, String>,
+    response_topics:      &HashMap<libp2p::gossipsub::TopicHash, String>,
     swarm:                &mut Swarm<PinaivuBehaviour>,
     own_caps:             &NodeCapabilities,
     announce_seq:         &mut u64,
@@ -588,7 +674,7 @@ async fn handle_swarm_event(
         SwarmEvent::Behaviour(crate::behaviour::PinaivuBehaviourEvent::Gossipsub(
             gossipsub::Event::Message { message, .. },
         )) => {
-            dispatch_gossipsub_message(message, event_tx, model_topics).await;
+            dispatch_gossipsub_message(message, event_tx, model_topics, response_topics).await;
         }
 
         SwarmEvent::Behaviour(crate::behaviour::PinaivuBehaviourEvent::Gossipsub(
@@ -660,10 +746,22 @@ async fn handle_swarm_event(
 }
 
 async fn dispatch_gossipsub_message(
-    message: gossipsub::Message,
-    event_tx: &mpsc::Sender<P2PEvent>,
-    model_topics: &HashMap<libp2p::gossipsub::TopicHash, String>,
+    message:         gossipsub::Message,
+    event_tx:        &mpsc::Sender<P2PEvent>,
+    model_topics:    &HashMap<libp2p::gossipsub::TopicHash, String>,
+    response_topics: &HashMap<libp2p::gossipsub::TopicHash, String>,
 ) {
+    // Check response topics first — they are dynamic and not in KnownTopic static list.
+    if let Some(response_id) = response_topics.get(&message.topic) {
+        if let Ok(chunk) = serde_json::from_slice::<P2PInferenceChunk>(&message.data) {
+            let _ = event_tx.send(P2PEvent::InferenceChunkReceived {
+                response_id: response_id.clone(),
+                chunk,
+            }).await;
+        }
+        return;
+    }
+
     let topic = topics::KnownTopic::from_hash(&message.topic);
 
     match topic {
@@ -717,8 +815,9 @@ async fn dispatch_gossipsub_message(
             debug!(topic = ?message.topic, "received health message");
         }
 
-        topics::KnownTopic::Unknown(hash) => {
-            debug!(%hash, "message on unknown topic");
+        topics::KnownTopic::InferenceResponse(_) | topics::KnownTopic::Unknown(_) => {
+            // Response topics are handled by the response_topics map check above.
+            // Unknown topics are silently ignored.
         }
     }
 }

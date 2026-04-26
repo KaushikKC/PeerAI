@@ -171,6 +171,29 @@ pub struct InferenceRequest {
     pub privacy_level:    PrivacyLevel,
     /// Settlement protocols the client is willing to use, in preference order.
     pub accepted_settlements: Vec<String>,
+    /// When set, only this peer should execute the request (P2P direct routing).
+    #[serde(default)]
+    pub target_peer_id:   Option<String>,
+    /// Gossipsub topic where the executing node should publish response chunks.
+    #[serde(default)]
+    pub response_topic:   Option<String>,
+    /// Plaintext prompt used in P2P routing (no encryption needed — local node proxies).
+    #[serde(default)]
+    pub prompt_plain:     Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// P2P inference chunk — published on the per-request response topic
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct P2PInferenceChunk {
+    pub request_id: RequestId,
+    pub token:      String,
+    pub is_final:   bool,
+    /// Set on error — token will be empty.
+    #[serde(default)]
+    pub error:      Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]

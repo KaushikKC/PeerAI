@@ -32,6 +32,8 @@ export interface InferRequest {
   session_id?: string;
   max_tokens?: number;
   temperature?: number;
+  /** Route inference to this peer via P2P (no port forwarding needed). */
+  peer_id?:    string;
 }
 
 export interface InferenceReceipt {
@@ -98,10 +100,12 @@ export async function fetchMarketplaceBids(req: MarketplaceRequest): Promise<Mar
   });
 }
 
-/** Pick the best bid: lowest price among nodes that have an api_url. */
+/**
+ * Pick the best bid: lowest price. All nodes are now reachable via P2P routing
+ * — api_url is no longer required for inference.
+ */
 export function pickBestBid(bids: MarketplaceBid[]): MarketplaceBid | null {
-  const reachable = bids.filter(b => b.api_url);
-  return reachable[0] ?? null;
+  return bids[0] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -148,20 +152,16 @@ export async function fetchModels(): Promise<ModelInfo[]> {
  * ```
  */
 /**
- * @param nodeApiUrl  If provided, route inference through this node instead of the local daemon.
- *                    The request goes via /api/node-proxy to avoid browser CORS restrictions.
+ * Stream tokens from the local daemon. When `req.peer_id` is set, the local
+ * node routes inference to that peer via P2P gossipsub — no port forwarding
+ * or api_url needed on the remote node.
  */
 export async function* streamInfer(
   req: InferRequest,
-  nodeApiUrl?: string,
 ): AsyncGenerator<string | InferenceReceipt> {
-  const url     = nodeApiUrl ? '/api/node-proxy' : `${BASE}/v1/infer`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (nodeApiUrl) headers['X-Node-Url'] = nodeApiUrl;
-
-  const resp = await fetch(url, {
+  const resp = await fetch(`${BASE}/v1/infer`, {
     method:  'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(req),
   });
 

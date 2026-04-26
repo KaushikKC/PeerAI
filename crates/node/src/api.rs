@@ -40,7 +40,7 @@ use inference::{InferenceEngine, InferenceParams};
 use p2p::P2PService;
 use settlement::{EscrowParams, SettlementAdapter, select_adapter};
 
-use crate::daemon::{BidCollectors, PeerRegistry};
+use crate::daemon::{BidCollectors, PeerRegistry, ResponseCollectors};
 use crate::identity::NodeIdentity;
 
 // ---------------------------------------------------------------------------
@@ -57,7 +57,9 @@ pub struct ApiState {
     /// Known peers from gossip announcements.
     pub peer_registry:  PeerRegistry,
     /// Channels waiting for bids from broadcast inference requests.
-    pub bid_collectors: BidCollectors,
+    pub bid_collectors:      BidCollectors,
+    /// Channels waiting for P2P inference chunks keyed by response_id.
+    pub response_collectors: ResponseCollectors,
     /// P2P service handle — `None` in standalone mode.
     pub p2p_service:    Option<P2PService>,
 }
@@ -487,12 +489,19 @@ pub struct InferRequest {
     pub max_tokens:           Option<u32>,
     pub temperature:          Option<f32>,
     pub accepted_settlements: Option<Vec<String>>,
+    /// When set, route inference to this peer via P2P gossipsub (no port forwarding needed).
+    pub peer_id:              Option<String>,
 }
 
 async fn infer_handler(
     State(state): State<ApiState>,
     Json(body):   Json<InferRequest>,
 ) -> Response {
+    // ── P2P routing path ──────────────────────────────────────────────────────
+    if let Some(peer_id) = body.peer_id.clone() {
+        return infer_via_p2p(state, body, peer_id).await;
+    }
+
     let request_id: RequestId = uuid::Uuid::new_v4();
 
     let (tokens, latency_ms) = match run_and_collect(
@@ -537,6 +546,107 @@ async fn infer_handler(
     ).await;
 
     ndjson_response(ndjson_body(&tokens, receipt))
+}
+
+// ---------------------------------------------------------------------------
+// P2P inference routing — send request to a remote peer via gossipsub,
+// stream token chunks back as they arrive over the response topic.
+// ---------------------------------------------------------------------------
+
+async fn infer_via_p2p(state: ApiState, body: InferRequest, target_peer_id: String) -> Response {
+    use common::types::{P2PInferenceChunk, PrivacyLevel};
+    use std::time::UNIX_EPOCH;
+
+    let p2p = match &state.p2p_service {
+        Some(p) => p.clone(),
+        None => {
+            let err = serde_json::json!({"error": "P2P not available in standalone mode"});
+            return (StatusCode::SERVICE_UNAVAILABLE, cors_headers(), Json(err)).into_response();
+        }
+    };
+
+    let request_id  = uuid::Uuid::new_v4();
+    let response_id = uuid::Uuid::new_v4().to_string();
+
+    // Register response channel BEFORE subscribing so we don't miss chunks.
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<P2PInferenceChunk>(256);
+    state.response_collectors.lock().await.insert(response_id.clone(), tx);
+
+    // Subscribe to the response topic so the remote node's chunks reach us.
+    if let Err(e) = p2p.subscribe_response_topic(&response_id).await {
+        warn!(%e, "failed to subscribe response topic");
+    }
+
+    // Small delay to let the subscription propagate through gossipsub mesh.
+    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    // Build and broadcast the targeted inference request.
+    let req = InferenceRequest {
+        request_id,
+        session_id:           uuid::Uuid::nil(),
+        model_preference:     body.model_id.clone(),
+        context_blob_id:      None,
+        prompt_encrypted:     vec![],
+        prompt_nonce:         vec![],
+        max_tokens:           body.max_tokens.unwrap_or(2048),
+        temperature:          body.temperature.unwrap_or(0.7),
+        escrow_tx_id:         String::new(),
+        budget_nanox:         u64::MAX,
+        timestamp:            SystemTime::now()
+                                  .duration_since(UNIX_EPOCH)
+                                  .unwrap_or_default()
+                                  .as_secs(),
+        client_peer_id:       "local".into(),
+        privacy_level:        PrivacyLevel::Standard,
+        accepted_settlements: body.accepted_settlements.clone().unwrap_or_else(|| vec!["free".into()]),
+        target_peer_id:       Some(target_peer_id.clone()),
+        response_topic:       Some(response_id.clone()),
+        prompt_plain:         Some(body.prompt.clone()),
+    };
+
+    if let Err(e) = p2p.broadcast_inference_request(&req).await {
+        warn!(%e, "failed to broadcast P2P inference request");
+        let err = serde_json::json!({"error": format!("broadcast failed: {e}")});
+        return (StatusCode::INTERNAL_SERVER_ERROR, cors_headers(), Json(err)).into_response();
+    }
+
+    info!(
+        %request_id,
+        target = %target_peer_id,
+        model  = %body.model_id,
+        "P2P inference request broadcast — waiting for chunks"
+    );
+
+    // Collect chunks and stream them as NDJSON.
+    let timeout = Duration::from_secs(120);
+    let deadline = Instant::now() + timeout;
+
+    let mut tokens: Vec<String> = Vec::new();
+
+    loop {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            warn!(%request_id, "P2P inference timed out");
+            break;
+        }
+        match tokio::time::timeout(remaining, rx.recv()).await {
+            Ok(Some(chunk)) => {
+                if let Some(err) = &chunk.error {
+                    error!(%request_id, %err, "remote inference error");
+                    break;
+                }
+                tokens.push(chunk.token.clone());
+                if chunk.is_final { break; }
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
+
+    // Cleanup.
+    state.response_collectors.lock().await.remove(&response_id);
+    p2p.unsubscribe_response_topic(&response_id).await;
+
+    ndjson_response(ndjson_body(&tokens, None))
 }
 
 // ---------------------------------------------------------------------------
@@ -859,6 +969,9 @@ async fn marketplace_request_handler(
         client_peer_id:       "http-marketplace-client".into(),
         privacy_level:        PrivacyLevel::Standard,
         accepted_settlements: body.accepted_settlements.clone().unwrap_or_else(|| vec!["free".into()]),
+        target_peer_id:       None,
+        response_topic:       None,
+        prompt_plain:         None,
     };
 
     if let Err(e) = p2p.broadcast_inference_request(&req).await {

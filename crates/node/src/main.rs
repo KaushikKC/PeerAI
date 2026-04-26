@@ -243,14 +243,15 @@ async fn cmd_start(mut config: NodeConfig) -> anyhow::Result<()> {
 
     // Start inference API server (used by the TS SDK + web UI in standalone mode)
     let api_state = api::ApiState {
-        engine:         daemon.inference_engine(),
-        settlements:    daemon.settlements().to_vec(),
-        identity:       daemon.identity(),
-        version:        env!("CARGO_PKG_VERSION").to_string(),
-        mode:           daemon.mode_str(),
-        peer_registry:  daemon.peer_registry(),
-        bid_collectors: daemon.bid_collectors(),
-        p2p_service:    daemon.p2p_service_cloned(),
+        engine:              daemon.inference_engine(),
+        settlements:         daemon.settlements().to_vec(),
+        identity:            daemon.identity(),
+        version:             env!("CARGO_PKG_VERSION").to_string(),
+        mode:                daemon.mode_str(),
+        peer_registry:       daemon.peer_registry(),
+        bid_collectors:      daemon.bid_collectors(),
+        response_collectors: daemon.response_collectors(),
+        p2p_service:         daemon.p2p_service_cloned(),
     };
     api::start(config.health.api_port, api_state).await?;
 

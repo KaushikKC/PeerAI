@@ -4,26 +4,25 @@ use libp2p::gossipsub::{IdentTopic, TopicHash};
 // Static topics
 // ---------------------------------------------------------------------------
 
-/// Node presence and capability announcements.
-pub const TOPIC_NODE_ANNOUNCE: &str = "node/announce";
+pub const TOPIC_NODE_ANNOUNCE:    &str = "node/announce";
+pub const TOPIC_NODE_HEALTH:      &str = "node/health";
+pub const TOPIC_REPUTATION:       &str = "reputation/update";
+pub const TOPIC_INFERENCE_ANY:    &str = "inference/any";
 
-/// Periodic heartbeat / health broadcasts.
-pub const TOPIC_NODE_HEALTH: &str = "node/health";
-
-/// Reputation score updates from the on-chain reputation system.
-pub const TOPIC_REPUTATION: &str = "reputation/update";
-
-/// Broadcast all inference requests regardless of model.
-pub const TOPIC_INFERENCE_ANY: &str = "inference/any";
+/// Prefix for per-request response topics. Full topic: `infer/resp/<response_id>`.
+pub const TOPIC_INFER_RESP_PREFIX: &str = "infer/resp/";
 
 // ---------------------------------------------------------------------------
 // Dynamic topic helpers
 // ---------------------------------------------------------------------------
 
-/// Model-specific inference topic — nodes subscribe only to the models they
-/// have loaded. Format: `inference/<model_id>` (e.g. `inference/llama3.1:8b`).
 pub fn inference_topic(model_id: &str) -> IdentTopic {
     IdentTopic::new(format!("inference/{model_id}"))
+}
+
+/// Per-request response topic — client subscribes, worker publishes chunks here.
+pub fn infer_response_topic(response_id: &str) -> IdentTopic {
+    IdentTopic::new(format!("{TOPIC_INFER_RESP_PREFIX}{response_id}"))
 }
 
 pub fn node_announce_topic()  -> IdentTopic { IdentTopic::new(TOPIC_NODE_ANNOUNCE) }
@@ -42,6 +41,7 @@ pub enum KnownTopic {
     Reputation,
     InferenceAny,
     InferenceModel(String),
+    InferenceResponse(String), // response_id
     Unknown(TopicHash),
 }
 
@@ -58,9 +58,6 @@ impl KnownTopic {
                 return variant.clone();
             }
         }
-        // Try to match inference/<model>
-        // We can't reverse a hash, so callers that need model-specific routing
-        // should keep a local map of hash → model_id (built when subscribing).
         KnownTopic::Unknown(hash.clone())
     }
 }
