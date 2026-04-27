@@ -17,7 +17,7 @@ serde           = { workspace = true }
 serde_json      = { workspace = true }
 futures         = { workspace = true }
 hex             = { workspace = true }
-libp2p = { version = "0.54", features = [
+libp2p = { version = "0.56", features = [
   "kad", "gossipsub", "noise", "yamux", "tcp", "quic",
   "identify", "ping", "mdns", "autonat",
   "macros", "tokio",

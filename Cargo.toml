@@ -9,8 +9,11 @@ members = [
   "crates/common",
   "crates/reputation",
   "crates/settlement",
-  "programs/pinaivu",
 ]
+# programs/pinaivu (Anchor/Solana program) excluded from workspace — Anchor's
+# solana-program dep pulls curve25519-dalek v3 which conflicts with libp2p's
+# zeroize >=1.5 requirement.  Build it separately with `anchor build`.
+exclude = ["programs/pinaivu"]
 resolver = "2"
 
 [workspace.dependencies]

@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-# Enable with: cargo build -p settlement --features solana
-# The node crate should add settlement = { ..., features = ["solana"] } to use it.
-solana = ["dep:solana-sdk", "dep:solana-client"]
+# Solana deps conflict with zeroize version requirements from other workspace crates.
+# To re-enable: restore solana-sdk/solana-client below, change this back, and resolve deps.
+solana = []
 
 [dependencies]
 common      = { path = "../common" }
@@ -25,9 +25,9 @@ sha3        = { workspace = true }
 ed25519-dalek = { workspace = true }
 uuid        = { workspace = true }
 
-# Solana SDK — only compiled when the "solana" feature is enabled.
-solana-sdk    = { version = "1.18", optional = true }
-solana-client = { version = "1.18", optional = true }
+# Solana SDK deps removed from optional — zeroize version conflict with workspace.
+# curve25519-dalek v3 (solana 1.18) needs zeroize < 1.4, but workspace needs zeroize 1.8.
+# Re-add when solana-sdk upgrades to curve25519-dalek v4 (expected ~solana 2.x).
 
 [dev-dependencies]
 tokio         = { workspace = true, features = ["full"] }

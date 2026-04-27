@@ -333,7 +333,7 @@ fn build_swarm(config: &NodeConfig) -> anyhow::Result<Swarm<PinaivuBehaviour>> {
     let swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
         .with_tcp(
-            tcp::Config::default().port_reuse(false),
+            tcp::Config::default(),
             noise::Config::new,
             yamux::Config::default,
         )?
@@ -538,11 +538,10 @@ fn handle_command(
                 let any_topic   = topics::inference_any_topic();
 
                 // Model-specific publish is best-effort (not all nodes subscribe to
-                // every model). Ignore InsufficientPeers on this topic.
+                // every model). NoPeersSubscribedToTopic and Duplicate are fine here —
+                // the any-topic below is the required delivery path.
                 if let Err(e) = swarm.behaviour_mut().gossipsub.publish(model_topic, payload.clone()) {
-                    // InsufficientPeers and Duplicate are both fine on the model topic —
-                    // the any-topic below is the required delivery path.
-                    if !matches!(e, gossipsub::PublishError::InsufficientPeers | gossipsub::PublishError::Duplicate) {
+                    if !matches!(e, gossipsub::PublishError::NoPeersSubscribedToTopic | gossipsub::PublishError::Duplicate) {
                         return Err(anyhow::anyhow!("model-topic publish: {e}"));
                     }
                 }
