@@ -343,9 +343,59 @@ impl DeAIDaemon {
                         );
                         Some(Arc::new(EvmSettlement::new(cfg)) as Arc<dyn SettlementAdapter>)
                     }
+                    "solana" => {
+                        #[cfg(not(feature = "solana"))]
+                        {
+                            warn!("solana adapter: binary was not compiled with --features solana — skipped");
+                            None
+                        }
+                        #[cfg(feature = "solana")]
+                        {
+                            let rpc_url = match &a.rpc_url {
+                                Some(u) => u.clone(),
+                                None => {
+                                    warn!("solana adapter: rpc_url not configured — skipped");
+                                    return None;
+                                }
+                            };
+                            let program_id_str = match &a.contract_address {
+                                Some(p) => p.clone(),
+                                None => {
+                                    warn!("solana adapter: contract_address (program_id) not configured — skipped");
+                                    return None;
+                                }
+                            };
+
+                            if a.signer_key_hex.is_none() {
+                                warn!("solana adapter: signer_key_hex absent — read-only mode (no escrow)");
+                            }
+
+                            let cfg = settlement::SolanaConfig {
+                                rpc_url,
+                                program_id_str,
+                                keypair_hex:         a.signer_key_hex.clone(),
+                                node_p2p_pubkey_hex: a.node_pubkey_hex.clone(),
+                                price_per_1k:        a.price_per_1k,
+                            };
+
+                            match settlement::SolanaSettlement::new(cfg) {
+                                Ok(adapter) => {
+                                    info!(
+                                        rpc_url    = %a.rpc_url.as_deref().unwrap_or(""),
+                                        program_id = %a.contract_address.as_deref().unwrap_or(""),
+                                        "solana settlement adapter loaded"
+                                    );
+                                    Some(Arc::new(adapter) as Arc<dyn SettlementAdapter>)
+                                }
+                                Err(e) => {
+                                    warn!(error = %e, "solana adapter: init failed — skipped");
+                                    None
+                                }
+                            }
+                        }
+                    }
                     other => {
-                        // Future adapters (Solana, etc.)
-                        info!(adapter = %other, "settlement adapter not yet implemented — skipped");
+                        info!(adapter = %other, "unknown settlement adapter id — skipped");
                         None
                     }
                 }

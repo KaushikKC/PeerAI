@@ -7,6 +7,21 @@ edition = "2021"
 name = "pinaivu"
 path = "src/main.rs"
 
+# ---------------------------------------------------------------------------
+# Optional features
+#
+# solana — compile in the Solana settlement adapter (uses solana-sdk 1.18).
+#          Without this flag the binary runs identically: free/receipt/sui/evm
+#          adapters all work.  Enable only when deploying against the pinaivu
+#          Anchor program on Solana devnet or mainnet.
+#
+# Usage:
+#   cargo build -p node --features solana
+#   cargo run  -p node --features solana -- start
+# ---------------------------------------------------------------------------
+[features]
+solana = ["settlement/solana"]
+
 [dependencies]
 common           = { path = "../common" }
 reputation       = { path = "../reputation" }

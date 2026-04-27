@@ -1,14 +1,15 @@
-//! Settlement crate — pluggable payment and escrow backends for DeAI.
+//! Settlement crate — pluggable payment and escrow backends for Pinaivu AI.
 //!
 //! ## Architecture
 //!
 //! ```text
 //! SettlementAdapter (trait)
-//! ├── FreeSettlement          — no payment, no chain required           ✅
-//! ├── SignedReceiptSettlement  — node signs proof; client trusts receipt  ✅
-//! ├── PaymentChannel          — off-chain bilateral channels + on-chain  ✅ Phase F
-//! ├── SuiSettlement           — Move escrow contracts on Sui             ✅ Phase D
-//! └── EvmSettlement           — Solidity escrow, any EVM chain           ✅ Phase E
+//! ├── FreeSettlement           — no payment, no chain required
+//! ├── SignedReceiptSettlement  — node signs proof; client trusts receipt
+//! ├── PaymentChannel           — off-chain bilateral channels + on-chain open/close
+//! ├── SuiSettlement            — Move escrow contracts on Sui
+//! ├── EvmSettlement            — Solidity escrow, any EVM chain
+//! └── SolanaSettlement         — SOL escrow via pinaivu Anchor program  [feature = "solana"]
 //! ```
 //!
 //! All node code holds `Vec<Arc<dyn SettlementAdapter>>`. Which adapters are
@@ -20,6 +21,8 @@ pub mod channel;
 pub mod evm;
 pub mod free;
 pub mod receipt;
+#[cfg(feature = "solana")]
+pub mod solana;
 pub mod sui;
 
 pub use adapter::{
@@ -30,4 +33,6 @@ pub use channel::{ChannelChainConfig, PaymentChannel};
 pub use evm::{EvmConfig, EvmSettlement};
 pub use free::FreeSettlement;
 pub use receipt::SignedReceiptSettlement;
+#[cfg(feature = "solana")]
+pub use solana::{SolanaConfig, SolanaSettlement};
 pub use sui::{SuiConfig, SuiSettlement};

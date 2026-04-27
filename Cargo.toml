@@ -9,6 +9,7 @@ members = [
   "crates/common",
   "crates/reputation",
   "crates/settlement",
+  "programs/pinaivu",
 ]
 resolver = "2"
 

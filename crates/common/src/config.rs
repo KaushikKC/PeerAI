@@ -340,8 +340,13 @@ pub struct SettlementAdapterConfig {
     pub chain_id:         Option<u64>,
     /// Hex-encoded Ed25519 private-key seed (32 bytes) for the node's on-chain wallet.
     /// Used by Sui and EVM adapters to sign transactions.
+    /// For Solana: pass the full 64-byte keypair (seed || pubkey) as hex.
     /// Leave unset to make the adapter read-only (balance queries only).
     pub signer_key_hex:   Option<String>,
+    /// Hex-encoded Ed25519 P2P pubkey (32 bytes) for this node.
+    /// Used by the Solana adapter to derive the score PDA for anchor_hash.
+    /// Matches NodeRegistration.node_pubkey / NodeScore.node_pubkey on-chain.
+    pub node_pubkey_hex:  Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
